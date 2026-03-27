@@ -1,0 +1,457 @@
+// NOCTA PEPTIDES — Product Data
+// All 28 products with CDN image URLs, pricing, dosage variants, and descriptions
+
+export interface ProductVariant {
+  dose: string;
+  price: number;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  category: string;
+  image: string;
+  imageCompressed: string;
+  purity: string;
+  shortDesc: string;
+  description: string;
+  variants: ProductVariant[];
+  featured?: boolean;
+  isBlend?: boolean;
+  blendComponents?: string[];
+  coaUrl?: string;
+  tags?: string[];
+}
+
+export const CATEGORIES = [
+  { id: 'all', label: 'All Products' },
+  { id: 'weight-loss', label: 'Weight Loss' },
+  { id: 'recovery', label: 'Recovery' },
+  { id: 'anti-aging', label: 'Anti-Aging' },
+  { id: 'cognitive', label: 'Cognitive' },
+  { id: 'sexual-health', label: 'Sexual Health' },
+  { id: 'blends', label: 'Blends & Stacks' },
+  { id: 'accessories', label: 'Accessories' },
+];
+
+export const PRODUCTS: Product[] = [
+  {
+    id: 'glp3-rt',
+    name: 'GLP-3 RT',
+    category: 'weight-loss',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/glp3-rt-10mg-5p2JT4rGDa43d5cz2bHXTL.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/glp3-rt-10mg-fjNeWbk44xBJhtKUSv98Hz.webp',
+    purity: '99%+',
+    shortDesc: 'Next-generation GLP receptor agonist for metabolic research.',
+    description: 'GLP-3 RT is a next-generation glucagon-like peptide receptor agonist designed for advanced metabolic research. Studies suggest significant effects on appetite regulation, glucose metabolism, and body composition. Third-party tested to 99%+ purity.',
+    variants: [
+      { dose: '10mg', price: 89.99 },
+      { dose: '20mg', price: 159.99 },
+      { dose: '30mg', price: 219.99 },
+    ],
+    featured: true,
+    tags: ['bestseller', 'weight-loss'],
+  },
+  {
+    id: 'bpc-157',
+    name: 'BPC-157',
+    category: 'recovery',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/bpc157-10mg-DwiDDzL2BKoXLqSLtFXEEM.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/bpc157-10mg-WpMQDeCyjzQradM6TiNGej.webp',
+    purity: '99%+',
+    shortDesc: 'Body Protection Compound for tissue repair research.',
+    description: 'BPC-157 (Body Protection Compound) is a pentadecapeptide derived from human gastric juice. Extensively studied for its role in tissue repair, angiogenesis, and cytoprotective effects. One of the most researched recovery peptides available.',
+    variants: [
+      { dose: '10mg', price: 69.99 },
+    ],
+    featured: true,
+    tags: ['bestseller', 'recovery'],
+  },
+  {
+    id: 'tb-500',
+    name: 'TB-500',
+    category: 'recovery',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/tb500-10mg-QRjrcyE8EZUHpW9khYQPjq.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/tb500-10mg-QGFGN5YhNusJtBispg69zS.webp',
+    purity: '99%+',
+    shortDesc: 'Thymosin Beta-4 fragment for recovery and regeneration research.',
+    description: 'TB-500 is a synthetic version of the naturally occurring peptide Thymosin Beta-4. Research indicates roles in cell migration, differentiation, and wound healing. Widely studied for musculoskeletal recovery applications.',
+    variants: [
+      { dose: '10mg', price: 74.99 },
+    ],
+    featured: true,
+    tags: ['recovery'],
+  },
+  {
+    id: 'ghk-cu',
+    name: 'GHK-Cu',
+    category: 'anti-aging',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/ghkcu-5mg-er2EvFihfzzAEY7VDt8M65.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/ghkcu-5mg-ivAGUPzZ4ipWeYWkucwSfC.webp',
+    purity: '99%+',
+    shortDesc: 'Copper tripeptide complex for skin and anti-aging research.',
+    description: 'GHK-Cu (Glycyl-L-Histidyl-L-Lysine Copper) is a naturally occurring copper complex with extensive research in skin regeneration, wound healing, and anti-aging applications. Studies show upregulation of collagen synthesis and antioxidant activity.',
+    variants: [
+      { dose: '5mg', price: 49.99 },
+    ],
+    tags: ['anti-aging'],
+  },
+  {
+    id: 'cjc1295-ipamorelin',
+    name: 'CJC-1295 / Ipamorelin',
+    category: 'anti-aging',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/cjc1295-ipamorelin-10mg-S7trxJe5hN3e2oSdhzS6aS.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/cjc1295-ipamorelin-10mg-YSrcmjGyB8kzFyEU5r68hd.webp',
+    purity: '99%+',
+    shortDesc: 'GHRH analog + GHRP blend for growth hormone research.',
+    description: 'A synergistic combination of CJC-1295 (a GHRH analog) and Ipamorelin (a selective GHRP). Research demonstrates amplified GH pulse frequency and amplitude compared to either peptide alone. Studied for body composition and recovery applications.',
+    variants: [
+      { dose: '10mg', price: 84.99 },
+    ],
+    tags: ['anti-aging', 'recovery'],
+  },
+  {
+    id: 'tesamorlin',
+    name: 'Tesamorlin',
+    category: 'weight-loss',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/tesamorlin-10mg-LnGGGWGnppxsBu9tbiHJr9.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/tesamorlin-10mg-iSb79DGS2vztJjYmrJkpJD.webp',
+    purity: '99%+',
+    shortDesc: 'GHRH analog studied for visceral adipose tissue reduction.',
+    description: 'Tesamorlin is a synthetic analog of growth hormone-releasing hormone (GHRH). Research has focused on its effects on visceral adipose tissue reduction and metabolic parameters. Studied extensively in lipodystrophy and metabolic syndrome contexts.',
+    variants: [
+      { dose: '10mg', price: 94.99 },
+    ],
+    tags: ['weight-loss'],
+  },
+  {
+    id: 'aod-9604',
+    name: 'AOD-9604',
+    category: 'weight-loss',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/aod9604-10mg-fMXH98g5ffY8e8HBjH288j.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/aod9604-10mg-X9QKsThYFbADGWNSuwTPFb.webp',
+    purity: '99%+',
+    shortDesc: 'Modified GH fragment for lipolysis and fat metabolism research.',
+    description: 'AOD-9604 is a modified fragment of human growth hormone (hGH176-191). Research indicates selective lipolytic activity without the IGF-1 mediated effects of full hGH. Studied for fat metabolism and anti-obesity applications.',
+    variants: [
+      { dose: '10mg', price: 79.99 },
+    ],
+    tags: ['weight-loss'],
+  },
+  {
+    id: 'mots-c',
+    name: 'MOTS-C',
+    category: 'anti-aging',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/motsc-10mg-SFC5vdFFK76H6tBvTcmRk2.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/motsc-10mg-CTn5bcBs73pnKMaprCDLJ6.webp',
+    purity: '99%+',
+    shortDesc: 'Mitochondrial-derived peptide for metabolic and longevity research.',
+    description: 'MOTS-C is a mitochondrial-derived peptide encoded in the mitochondrial genome. Research suggests roles in metabolic homeostasis, insulin sensitivity, and exercise capacity. Emerging research links it to longevity pathways.',
+    variants: [
+      { dose: '10mg', price: 109.99 },
+    ],
+    tags: ['anti-aging'],
+  },
+  {
+    id: 'nad-plus',
+    name: 'NAD+',
+    category: 'anti-aging',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/nad-500mg-7Zz6Bh9QBLb2r6BDgvZmKB.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/nad-500mg-68AdbtQCnSXFUAzHzREvnK.webp',
+    purity: '99%+',
+    shortDesc: 'Nicotinamide Adenine Dinucleotide for cellular energy research.',
+    description: 'NAD+ (Nicotinamide Adenine Dinucleotide) is a coenzyme central to cellular metabolism. Research demonstrates critical roles in energy production, DNA repair, and sirtuin activation. Studied extensively for anti-aging and neuroprotective applications.',
+    variants: [
+      { dose: '500mg', price: 119.99 },
+    ],
+    featured: true,
+    tags: ['anti-aging', 'bestseller'],
+  },
+  {
+    id: 'kpv',
+    name: 'KPV',
+    category: 'recovery',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/kpv-10mg-XvUL5W3J6KheBV7nEtdNvg.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/kpv-10mg-FMgD8fXySDEhKjiaRyrtea.webp',
+    purity: '99%+',
+    shortDesc: 'Alpha-MSH tripeptide for anti-inflammatory research.',
+    description: 'KPV is a C-terminal tripeptide fragment of alpha-MSH (Lys-Pro-Val). Research demonstrates potent anti-inflammatory properties through inhibition of NF-κB signaling. Studied for gut health, wound healing, and inflammatory condition applications.',
+    variants: [
+      { dose: '10mg', price: 64.99 },
+    ],
+    tags: ['recovery'],
+  },
+  {
+    id: 'glutathione',
+    name: 'Glutathione',
+    category: 'anti-aging',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/glutathione-500mg-ksk5EMki48akJhnqeK4ePd.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/glutathione-500mg-ZdC9eAFSAaENCP5HMMuy3u.webp',
+    purity: '99%+',
+    shortDesc: 'Master antioxidant tripeptide for oxidative stress research.',
+    description: 'Glutathione (GSH) is the most abundant intracellular antioxidant. Research demonstrates roles in oxidative stress reduction, immune function, and detoxification. Studied for neuroprotection, skin brightening, and cellular health applications.',
+    variants: [
+      { dose: '500mg', price: 89.99 },
+    ],
+    tags: ['anti-aging'],
+  },
+  {
+    id: 'cagrilintide',
+    name: 'Cagrilintide',
+    category: 'weight-loss',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/cagrilintide-10mg-9fyVEwBjStBP8b8gwhQ6XV.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/cagrilintide-10mg-mDsP4xbVkYk6uqfjxJSMMG.webp',
+    purity: '99%+',
+    shortDesc: 'Long-acting amylin analog for satiety and weight research.',
+    description: 'Cagrilintide is a long-acting amylin analog under investigation for obesity management. Research shows synergistic effects with GLP-1 receptor agonists on appetite suppression and body weight reduction. Studied for metabolic syndrome applications.',
+    variants: [
+      { dose: '10mg', price: 129.99 },
+    ],
+    tags: ['weight-loss'],
+  },
+  {
+    id: 'ipamorelin',
+    name: 'Ipamorelin',
+    category: 'anti-aging',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/ipamorelin-10mg-NXM3hyG2QSqiKYZpNnZm7E.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/ipamorelin-10mg-aPV468zW3fJpQ4XFwQU2D2.webp',
+    purity: '99%+',
+    shortDesc: 'Selective GHRP for growth hormone secretagogue research.',
+    description: 'Ipamorelin is a selective growth hormone secretagogue and ghrelin receptor agonist. Research demonstrates selective GH release with minimal effect on cortisol or prolactin. Studied for anti-aging, body composition, and recovery applications.',
+    variants: [
+      { dose: '10mg', price: 69.99 },
+    ],
+    tags: ['anti-aging'],
+  },
+  {
+    id: 'igf1-lr3',
+    name: 'IGF-1 LR3',
+    category: 'recovery',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/igf1lr3-1mg-458rGfYcR22o6kndqsJ4o6.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/igf1lr3-1mg-GzEDSf59jSQYr2SkEVskKm.webp',
+    purity: '99%+',
+    shortDesc: 'Long-acting IGF-1 analog for muscle and recovery research.',
+    description: 'IGF-1 LR3 is a recombinant analog of Insulin-like Growth Factor 1 with an arginine substitution and 13-amino acid extension. Research demonstrates extended half-life and enhanced anabolic signaling compared to native IGF-1.',
+    variants: [
+      { dose: '1mg', price: 79.99 },
+    ],
+    tags: ['recovery'],
+  },
+  {
+    id: 'epithalon',
+    name: 'Epithalon',
+    category: 'anti-aging',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/epithalon-10mg-MpwsL7f6AmdZHBk28uBxEn.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/epithalon-10mg-PnSYyzMdJe7vUhvPo7eNLQ.webp',
+    purity: '99%+',
+    shortDesc: 'Telomerase-activating tetrapeptide for longevity research.',
+    description: 'Epithalon (Epitalon) is a synthetic tetrapeptide derived from the pineal gland extract Epithalamin. Research demonstrates telomerase activation, antioxidant properties, and circadian rhythm regulation. Studied extensively for longevity and anti-aging applications.',
+    variants: [
+      { dose: '10mg', price: 74.99 },
+    ],
+    tags: ['anti-aging'],
+  },
+  {
+    id: '5-amino-1mq',
+    name: '5-Amino-1MQ',
+    category: 'weight-loss',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/5amino1mq-100mg-AGfdum2eMCtT7bF6CM8rZy.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/5amino1mq-100mg-AYiRjd2Bt7SkvLqsQuRbpC.webp',
+    purity: '99%+',
+    shortDesc: 'NNMT inhibitor for metabolic and fat cell research.',
+    description: '5-Amino-1MQ is a small molecule inhibitor of Nicotinamide N-methyltransferase (NNMT). Research demonstrates effects on adipocyte metabolism, NAD+ levels, and fat cell differentiation. Studied for obesity and metabolic syndrome research.',
+    variants: [
+      { dose: '100mg', price: 99.99 },
+    ],
+    tags: ['weight-loss'],
+  },
+  {
+    id: 'thymosin-alpha1',
+    name: 'Thymosin Alpha-1',
+    category: 'recovery',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/thymosin-alpha1-5mg-VE3B3YJoNaYQWX2g5SZWWL.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/thymosin-alpha1-5mg-ZSdEy2wsvkuBtuMubsnP4k.webp',
+    purity: '99%+',
+    shortDesc: 'Thymic peptide for immune modulation research.',
+    description: 'Thymosin Alpha-1 (Tα1) is a 28-amino acid peptide derived from thymosin fraction 5. Research demonstrates immunomodulatory properties including T-cell maturation, NK cell activation, and cytokine regulation. Studied for immune deficiency and inflammatory conditions.',
+    variants: [
+      { dose: '5mg', price: 84.99 },
+    ],
+    tags: ['recovery'],
+  },
+  {
+    id: 'semax',
+    name: 'Semax',
+    category: 'cognitive',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/semax-30mg-SV59Z34DaLW4GJgtptLdRm.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/semax-30mg-2NhMch8QPdrNHKsoSZ9wTs.webp',
+    purity: '99%+',
+    shortDesc: 'ACTH analog for neuroprotection and cognitive research.',
+    description: 'Semax is a synthetic heptapeptide analog of ACTH(4-7). Research demonstrates neuroprotective, nootropic, and anxiolytic properties. Studied for BDNF upregulation, stroke recovery, and cognitive enhancement applications.',
+    variants: [
+      { dose: '30mg', price: 89.99 },
+    ],
+    featured: true,
+    tags: ['cognitive'],
+  },
+  {
+    id: 'selank',
+    name: 'Selank',
+    category: 'cognitive',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/selank-30mg-Fm3pAZYCfnFpy8wP94HbLL.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/selank-30mg-Lswcr2CX29gWVzdQdACaTo.webp',
+    purity: '99%+',
+    shortDesc: 'Anxiolytic heptapeptide for anxiety and cognition research.',
+    description: 'Selank is a synthetic analog of the immunomodulatory peptide tuftsin. Research demonstrates anxiolytic, antidepressant, and nootropic properties. Studied for GABAergic modulation, memory enhancement, and stress response regulation.',
+    variants: [
+      { dose: '30mg', price: 84.99 },
+    ],
+    tags: ['cognitive'],
+  },
+  {
+    id: 'dsip',
+    name: 'DSIP',
+    category: 'cognitive',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/dsip-10mg-CgxiuKvVyvgxFcHaTJoQeR.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/dsip-10mg-imCHaAMjxnkq3EbsJiu4oj.webp',
+    purity: '99%+',
+    shortDesc: 'Delta sleep-inducing peptide for sleep and stress research.',
+    description: 'DSIP (Delta Sleep-Inducing Peptide) is a neuropeptide with diverse physiological effects. Research demonstrates roles in sleep regulation, stress response modulation, and neuroendocrine function. Studied for sleep disorders and cortisol regulation.',
+    variants: [
+      { dose: '10mg', price: 59.99 },
+    ],
+    tags: ['cognitive'],
+  },
+  {
+    id: 'melanotan-ii',
+    name: 'Melanotan II',
+    category: 'sexual-health',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/melanotan2-10mg-bEdMpPyav9ZmhanQMJzhDh.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/melanotan2-10mg-SYjLaSiGzc6SMi9HZ3xHhp.webp',
+    purity: '99%+',
+    shortDesc: 'Melanocortin agonist for tanning and sexual function research.',
+    description: 'Melanotan II is a synthetic analog of alpha-MSH. Research demonstrates melanocortin receptor agonism with effects on pigmentation, sexual function, and appetite. Studied for photoprotection and erectile dysfunction research.',
+    variants: [
+      { dose: '10mg', price: 79.99 },
+    ],
+    tags: ['sexual-health'],
+  },
+  {
+    id: 'melanotan-i',
+    name: 'Melanotan I',
+    category: 'sexual-health',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/melanotan1-10mg-kAUbx8jiy3tLmABy5hqUog.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/melanotan1-10mg-2LAUk7RWN7LnaV5NoYmsB6.webp',
+    purity: '99%+',
+    shortDesc: 'Selective MC1R agonist for photoprotection research.',
+    description: 'Melanotan I (afamelanotide) is a synthetic analog of alpha-MSH with selective MC1R agonism. Research demonstrates photoprotective effects through melanogenesis stimulation. Studied for erythropoietic protoporphyria and photoprotection applications.',
+    variants: [
+      { dose: '10mg', price: 74.99 },
+    ],
+    tags: ['sexual-health'],
+  },
+  {
+    id: 'pt-141',
+    name: 'PT-141',
+    category: 'sexual-health',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/pt141-10mg-UxKZivkqiKYMyASouG6cyR.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/pt141-10mg-24pD5MBsN4cW9vAoJcrPqF.webp',
+    purity: '99%+',
+    shortDesc: 'Bremelanotide for sexual dysfunction research.',
+    description: 'PT-141 (Bremelanotide) is a melanocortin receptor agonist derived from Melanotan II. Research demonstrates central nervous system-mediated effects on sexual arousal in both male and female subjects. Studied for hypoactive sexual desire disorder.',
+    variants: [
+      { dose: '10mg', price: 84.99 },
+    ],
+    tags: ['sexual-health'],
+  },
+  {
+    id: 'snap-8',
+    name: 'SNAP-8',
+    category: 'anti-aging',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/snap8-50mg-YAtzLnMsiqZvWUhsN4GLAh.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/snap8-50mg-RhrsvEKtwV59DTXFuMVmxk.webp',
+    purity: '99%+',
+    shortDesc: 'Octapeptide for expression line and wrinkle research.',
+    description: 'SNAP-8 is an octapeptide analog of the N-terminal end of SNAP-25. Research demonstrates inhibition of SNARE complex formation, reducing neurotransmitter release at neuromuscular junctions. Studied for cosmetic anti-wrinkle applications.',
+    variants: [
+      { dose: '50mg', price: 94.99 },
+    ],
+    tags: ['anti-aging'],
+  },
+  {
+    id: 'bac-water',
+    name: 'BAC Water',
+    category: 'accessories',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/bac-water-30ml-PbWMuC3ci9BQ2zMCQE2RcD.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/bac-water-30ml-eZXPMBfJSEp2NmBiMT9HLY.webp',
+    purity: 'USP Grade',
+    shortDesc: 'Bacteriostatic water for peptide reconstitution.',
+    description: 'USP-grade bacteriostatic water containing 0.9% benzyl alcohol for multi-dose vial preservation. Essential for peptide reconstitution in research settings. Maintains sterility for extended periods after opening.',
+    variants: [
+      { dose: '30ml', price: 14.99 },
+    ],
+    tags: ['accessories'],
+  },
+  {
+    id: 'wolverine-blend',
+    name: 'Wolverine Blend',
+    category: 'blends',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/wolverine-blend-20mg-hsqyLmzJ5JrrKaXM2tBsCN.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/wolverine-blend-20mg-EAcRDJYu66PfqhkWKkoawd.webp',
+    purity: '99%+',
+    shortDesc: 'BPC-157 + TB-500 recovery stack for accelerated tissue repair research.',
+    description: 'The Wolverine Blend combines BPC-157 and TB-500 in a single vial for synergistic recovery research. BPC-157 targets local tissue repair while TB-500 promotes systemic healing and cell migration. The most popular recovery stack in research settings.',
+    variants: [
+      { dose: '20mg', price: 129.99 },
+    ],
+    isBlend: true,
+    blendComponents: ['BPC-157 10mg', 'TB-500 10mg'],
+    featured: true,
+    tags: ['blends', 'recovery', 'bestseller'],
+  },
+  {
+    id: 'glow-blend',
+    name: 'Glow Blend',
+    category: 'blends',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/glow-blend-70mg-BB8WxvbCgQ8PBZvQ26N2CP.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/glow-blend-70mg-T56TtF37S3BY9NkffFet3i.webp',
+    purity: '99%+',
+    shortDesc: 'GHK-Cu + NAD+ anti-aging stack for skin and cellular research.',
+    description: 'The Glow Blend combines GHK-Cu and NAD+ for comprehensive anti-aging research. GHK-Cu stimulates collagen synthesis and skin regeneration while NAD+ supports cellular energy and DNA repair. A powerful combination for longevity research.',
+    variants: [
+      { dose: '70mg', price: 189.99 },
+    ],
+    isBlend: true,
+    blendComponents: ['GHK-Cu 5mg', 'NAD+ 500mg'],
+    tags: ['blends', 'anti-aging'],
+  },
+  {
+    id: 'klow-blend',
+    name: 'KLOW Blend',
+    category: 'blends',
+    image: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/wolverine-blend-20mg-hsqyLmzJ5JrrKaXM2tBsCN.png',
+    imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/wolverine-blend-20mg-EAcRDJYu66PfqhkWKkoawd.webp',
+    purity: '99%+',
+    shortDesc: 'KPV + low-dose GLP-3 RT for gut health and metabolic research.',
+    description: 'The KLOW Blend combines KPV and a low-dose GLP-3 RT for synergistic gut health and metabolic research. KPV provides anti-inflammatory protection while GLP-3 RT supports metabolic regulation. Designed for comprehensive gastrointestinal research.',
+    variants: [
+      { dose: '80mg', price: 149.99 },
+    ],
+    isBlend: true,
+    blendComponents: ['KPV 10mg', 'GLP-3 RT 10mg'],
+    tags: ['blends', 'weight-loss'],
+  },
+];
+
+export function getProductById(id: string): Product | undefined {
+  return PRODUCTS.find(p => p.id === id);
+}
+
+export function getProductsByCategory(category: string): Product[] {
+  if (category === 'all') return PRODUCTS;
+  return PRODUCTS.filter(p => p.category === category);
+}
+
+export function getFeaturedProducts(): Product[] {
+  return PRODUCTS.filter(p => p.featured);
+}
