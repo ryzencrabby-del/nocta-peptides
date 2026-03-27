@@ -80,7 +80,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Price + Add to Cart */}
           <div className="flex items-center justify-between">
-            <span className="font-bold text-[#1A3A4A] text-base">${variant.price.toFixed(2)}</span>
+            <span className="font-bold text-[#1A3A4A] text-base">
+              {product.variants.length > 1 && selectedVariant === 0
+                ? `From $${Math.min(...product.variants.map(v => v.price)).toFixed(2)}`
+                : `$${variant.price.toFixed(2)}`}
+            </span>
             <button
               onClick={handleAddToCart}
               className="btn-navy flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs"
