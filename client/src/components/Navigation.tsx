@@ -1,6 +1,5 @@
 // NOCTA PEPTIDES — Navigation
-// Sticky top nav: NP logo left, links center, cart right
-// White background, dark navy text, subtle bottom border
+// Dark navy sticky top nav with white logo and links
 
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
@@ -21,13 +20,13 @@ export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+    <nav className="sticky top-0 z-50 bg-[#0D1F35] border-b border-white/10 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/nocta-logo-final-fyUwjEnZ5KRipST3XdZyWi.webp"
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/nocta-logo-dark-E8B8T43eri4iUVUhTCQsdy.webp"
               alt="Nocta Peptides"
               className="h-10 w-auto object-contain"
             />
@@ -41,8 +40,8 @@ export default function Navigation() {
                 href={link.href}
                 className={`text-sm font-medium transition-colors ${
                   location === link.href
-                    ? 'text-[#1A3A4A]'
-                    : 'text-gray-500 hover:text-[#1A3A4A]'
+                    ? 'text-white'
+                    : 'text-white/60 hover:text-white'
                 }`}
               >
                 {link.label}
@@ -54,19 +53,19 @@ export default function Navigation() {
           <div className="flex items-center gap-3">
             <button
               onClick={openCart}
-              className="relative p-2 text-gray-600 hover:text-[#1A3A4A] transition-colors"
+              className="relative p-2 text-white/70 hover:text-white transition-colors"
               aria-label="Open cart"
             >
               <ShoppingCart size={20} />
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-[#1A3A4A] text-white text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] min-h-[18px]">
+                <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-white text-[#0D1F35] text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] min-h-[18px]">
                   {totalItems}
                 </span>
               )}
             </button>
 
             <button
-              className="md:hidden p-2 text-gray-600 hover:text-[#1A3A4A]"
+              className="md:hidden p-2 text-white/70 hover:text-white"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
             >
@@ -78,7 +77,7 @@ export default function Navigation() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
+        <div className="md:hidden border-t border-white/10 bg-[#0D1F35]">
           <div className="px-4 py-3 space-y-1">
             {NAV_LINKS.map(link => (
               <Link
@@ -87,8 +86,8 @@ export default function Navigation() {
                 onClick={() => setMobileOpen(false)}
                 className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                   location === link.href
-                    ? 'bg-gray-50 text-[#1A3A4A]'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-[#1A3A4A]'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {link.label}

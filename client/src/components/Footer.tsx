@@ -7,24 +7,24 @@ import { Mail } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-100 mt-20">
+    <footer className="bg-[#0D1F35] border-t border-white/10 mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
             <div className="mb-4">
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/nocta-logo-final-fyUwjEnZ5KRipST3XdZyWi.webp"
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/nocta-logo-dark-E8B8T43eri4iUVUhTCQsdy.webp"
                 alt="Nocta Peptides"
                 className="h-10 w-auto object-contain"
               />
             </div>
-            <p className="text-gray-500 text-sm leading-relaxed">
+            <p className="text-white/50 text-sm leading-relaxed">
               Premium research-grade peptides. Third-party tested to 99%+ purity. Trusted by researchers worldwide.
             </p>
-            <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+            <div className="mt-4 flex items-center gap-2 text-sm text-white/50">
               <Mail size={14} />
-              <a href="mailto:support@noctapeptides.com" className="hover:text-[#1A3A4A] transition-colors">
+              <a href="mailto:support@noctapeptides.com" className="hover:text-white transition-colors">
                 support@noctapeptides.com
               </a>
             </div>
@@ -32,7 +32,7 @@ export default function Footer() {
 
           {/* Shop */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">Shop</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Shop</h4>
             <ul className="space-y-2.5">
               {[
                 { href: '/shop', label: 'All Products' },
@@ -43,7 +43,7 @@ export default function Footer() {
                 { href: '/shop?category=blends', label: 'Blends & Stacks' },
               ].map(link => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-gray-500 hover:text-[#1A3A4A] transition-colors">
+                  <Link href={link.href} className="text-sm text-white/50 hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -53,7 +53,7 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">Company</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Company</h4>
             <ul className="space-y-2.5">
               {[
                 { href: '/research', label: 'Research Library' },
@@ -62,7 +62,7 @@ export default function Footer() {
                 { href: '/contact', label: 'Contact Us' },
               ].map(link => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-gray-500 hover:text-[#1A3A4A] transition-colors">
+                  <Link href={link.href} className="text-sm text-white/50 hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -72,7 +72,7 @@ export default function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">Legal</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Legal</h4>
             <ul className="space-y-2.5">
               {[
                 { href: '/terms', label: 'Terms of Service' },
@@ -81,7 +81,7 @@ export default function Footer() {
                 { href: '/shipping', label: 'Shipping Policy' },
               ].map(link => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-gray-500 hover:text-[#1A3A4A] transition-colors">
+                  <Link href={link.href} className="text-sm text-white/50 hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -91,16 +91,16 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-400">
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-white/30">
             © 2026 Nocta Peptides. All rights reserved.
           </p>
-          <p className="text-xs text-gray-400 text-center sm:text-right max-w-md">
+          <p className="text-xs text-white/30 text-center sm:text-right max-w-md">
             All products are for research purposes only. Not for human consumption.
             By using this site you agree to our{' '}
-            <Link href="/terms" className="underline hover:text-gray-600">Terms of Service</Link>{' '}
+            <Link href="/terms" className="underline hover:text-white/60">Terms of Service</Link>{' '}
             and{' '}
-            <Link href="/disclaimer" className="underline hover:text-gray-600">Research Disclaimer</Link>.
+            <Link href="/disclaimer" className="underline hover:text-white/60">Research Disclaimer</Link>.
           </p>
         </div>
       </div>
