@@ -156,7 +156,7 @@ export default function Partner() {
                 <Mail size={14} /> Submit Application
               </button>
               <p className="text-xs text-gray-400 text-center">
-                Questions? Email <a href="mailto:partners@noctapeptides.com" className="text-[#1A3A4A] hover:underline">partners@noctapeptides.com</a>
+                Questions? Email <a href="mailto:support@noctapeptides.com" className="text-[#1A3A4A] hover:underline">support@noctapeptides.com</a>
               </p>
             </form>
           )}
