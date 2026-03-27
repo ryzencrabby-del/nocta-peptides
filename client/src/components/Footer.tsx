@@ -12,11 +12,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-sm bg-[#1A3A4A] flex items-center justify-center">
-                <span className="text-white font-bold text-xs">NP</span>
-              </div>
-              <span className="font-bold text-[#1A3A4A] text-sm tracking-tight">NOCTA PEPTIDES</span>
+            <div className="mb-4">
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/nocta-logo-final-fyUwjEnZ5KRipST3XdZyWi.webp"
+                alt="Nocta Peptides"
+                className="h-10 w-auto object-contain"
+              />
             </div>
             <p className="text-gray-500 text-sm leading-relaxed">
               Premium research-grade peptides. Third-party tested to 99%+ purity. Trusted by researchers worldwide.
