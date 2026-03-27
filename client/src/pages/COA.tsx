@@ -57,6 +57,16 @@ export default function COA() {
           </p>
         </div>
 
+        {/* HomePeptide rebrand notice */}
+        <div className="mb-8 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
+          <span className="text-amber-500 mt-0.5 flex-shrink-0 text-base">ℹ</span>
+          <p className="text-sm text-amber-800 leading-relaxed">
+            Our Certificates of Analysis are issued under <strong>HomePeptide</strong>, our previous brand name.
+            Nocta Peptides is the official rebrand. All Janoshik batch numbers and live test results remain
+            fully valid and verifiable.
+          </p>
+        </div>
+
         {/* Lab info banner */}
         <div className="bg-[#1A3A4A]/5 border border-[#1A3A4A]/10 rounded-xl p-5 mb-10 flex items-start gap-4">
           <FlaskConical size={20} className="text-[#1A3A4A] mt-0.5 flex-shrink-0" />
@@ -120,6 +130,10 @@ export default function COA() {
                     <Download size={11} /> Download COA
                   </button>
                 </div>
+                <p className="text-[10px] text-gray-400 italic mt-3 text-center">
+                  COA issued under HomePeptide — Nocta Peptides official rebrand.{' '}
+                  <a href="https://janoshik.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Verify live at janoshik.com</a>
+                </p>
               </div>
             );
           })}

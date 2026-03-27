@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/shop', label: 'Shop' },
   { href: '/research', label: 'Research Library' },
   { href: '/coa', label: 'COA' },
+  { href: '/about', label: 'About' },
   { href: '/partner', label: 'Partner Program' },
   { href: '/contact', label: 'Contact' },
 ];
@@ -24,12 +25,13 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center group">
+          <Link href="/" className="flex flex-col items-start group">
             <img
               src="https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/nocta-logo-dark-E8B8T43eri4iUVUhTCQsdy.webp"
               alt="Nocta Peptides"
-              className="h-10 w-auto object-contain"
+              className="h-9 w-auto object-contain"
             />
+            <span className="text-[10px] text-white/35 tracking-wide leading-none mt-0.5 hidden sm:block">Formerly known as HomePeptide</span>
           </Link>
 
           {/* Desktop Links */}

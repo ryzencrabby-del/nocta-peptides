@@ -18,6 +18,7 @@ import Contact from "./pages/Contact";
 import Partner from "./pages/Partner";
 import Checkout from "./pages/Checkout";
 import Legal from "./pages/Legal";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 function Router() {
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/privacy" component={Legal} />
       <Route path="/disclaimer" component={Legal} />
       <Route path="/shipping" component={Legal} />
+      <Route path="/about" component={About} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

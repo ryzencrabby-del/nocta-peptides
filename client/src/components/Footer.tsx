@@ -22,6 +22,9 @@ export default function Footer() {
             <p className="text-white/50 text-sm leading-relaxed">
               Premium research-grade peptides. Third-party tested to 99%+ purity. Trusted by researchers worldwide.
             </p>
+            <p className="text-white/30 text-xs leading-relaxed mt-3">
+              Nocta Peptides is the official rebrand of HomePeptide. Same verified compounds. Same Janoshik-tested batches.
+            </p>
             <div className="mt-4 flex items-center gap-2 text-sm text-white/50">
               <Mail size={14} />
               <a href="mailto:support@noctapeptides.com" className="hover:text-white transition-colors">
@@ -56,6 +59,7 @@ export default function Footer() {
             <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Company</h4>
             <ul className="space-y-2.5">
               {[
+                { href: '/about', label: 'About Us' },
                 { href: '/research', label: 'Research Library' },
                 { href: '/coa', label: 'Certificates of Analysis' },
                 { href: '/partner', label: 'Partner Program' },
