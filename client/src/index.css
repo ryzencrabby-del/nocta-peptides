@@ -191,6 +191,8 @@
     letter-spacing: 0.01em;
     padding: 0.5rem 1rem;
     text-align: center;
+    position: relative;
+    z-index: 30; /* below nav z-40, overlay z-200, drawer z-201 */
   }
 
   /* Cart drawer slide */

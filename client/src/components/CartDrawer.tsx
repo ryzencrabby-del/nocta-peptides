@@ -77,19 +77,25 @@ export default function CartDrawer() {
 
   return (
     <>
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm"
-          onClick={closeCart}
-        />
-      )}
+      {/* Overlay — covers everything: page, nav, banner. z-[200] > nav z-50 (50) and banner */}
+      <div
+        className="fixed inset-0 transition-opacity duration-300 ease-in-out"
+        style={{
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 200,
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+        }}
+        onClick={closeCart}
+        aria-hidden="true"
+      />
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
+        style={{ zIndex: 201 }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
