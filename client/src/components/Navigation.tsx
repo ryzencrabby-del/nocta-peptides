@@ -31,7 +31,7 @@ export default function Navigation() {
               alt="Nocta Peptides"
               className="h-9 w-auto object-contain"
             />
-            <span className="text-[10px] text-white/35 tracking-wide leading-none mt-0.5 hidden sm:block">Formerly known as HomePeptide</span>
+            <span className="text-[10px] text-white/35 tracking-wide leading-none mt-0.5 hidden sm:block">Formerly known as HomoPeptide</span>
           </Link>
 
           {/* Desktop Links */}

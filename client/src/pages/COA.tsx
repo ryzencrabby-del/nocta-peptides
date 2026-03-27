@@ -57,11 +57,11 @@ export default function COA() {
           </p>
         </div>
 
-        {/* HomePeptide rebrand notice */}
+        {/* HomoPeptide rebrand notice */}
         <div className="mb-8 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
           <span className="text-amber-500 mt-0.5 flex-shrink-0 text-base">ℹ</span>
           <p className="text-sm text-amber-800 leading-relaxed">
-            Our Certificates of Analysis are issued under <strong>HomePeptide</strong>, our previous brand name.
+            Our Certificates of Analysis are issued under <strong>HomoPeptide</strong>, our previous brand name.
             Nocta Peptides is the official rebrand. All Janoshik batch numbers and live test results remain
             fully valid and verifiable.
           </p>
@@ -131,7 +131,7 @@ export default function COA() {
                   </button>
                 </div>
                 <p className="text-[10px] text-gray-400 italic mt-3 text-center">
-                  COA issued under HomePeptide — Nocta Peptides official rebrand.{' '}
+                  COA issued under HomoPeptide — Nocta Peptides official rebrand.{' '}
                   <a href="https://janoshik.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Verify live at janoshik.com</a>
                 </p>
               </div>

@@ -65,7 +65,7 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 bg-[#1A3A4A]/5 border border-[#1A3A4A]/10 rounded-full px-4 py-1.5 mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-[#1A3A4A]/40" />
               <span className="text-xs text-[#1A3A4A]/70 font-medium tracking-wide">
-                Formerly HomePeptide — Same compounds. Same COAs. Elevated brand.
+                Formerly HomoPeptide — Same compounds. Same COAs. Elevated brand.
               </span>
             </div>
             <p className="text-gray-500 text-lg leading-relaxed mb-8 max-w-lg">

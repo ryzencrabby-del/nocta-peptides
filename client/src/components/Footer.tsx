@@ -23,7 +23,7 @@ export default function Footer() {
               Premium research-grade peptides. Third-party tested to 99%+ purity. Trusted by researchers worldwide.
             </p>
             <p className="text-white/30 text-xs leading-relaxed mt-3">
-              Nocta Peptides is the official rebrand of HomePeptide. Same verified compounds. Same Janoshik-tested batches.
+              Nocta Peptides is the official rebrand of HomoPeptide. Same verified compounds. Same Janoshik-tested batches.
             </p>
             <div className="mt-4 flex items-center gap-2 text-sm text-white/50">
               <Mail size={14} />
