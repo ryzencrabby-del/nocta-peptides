@@ -1,9 +1,9 @@
 // NOCTA PEPTIDES — Cart Drawer
 // Slides from right. Items with qty dropdown, shipping progress bar,
-// promo code, Google/Apple Pay button, Proceed to Checkout → fires pre-checkout legal popup.
+// promo code with full validation, Google/Apple Pay button, Proceed to Checkout → fires pre-checkout legal popup.
 
 import { useState, useEffect } from 'react';
-import { X, ShieldCheck, Tag, ShoppingBag } from 'lucide-react';
+import { X, ShieldCheck, Tag, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import CheckoutLegalPopup from './CheckoutLegalPopup';
 
@@ -30,10 +30,21 @@ function getPackingRange(): string {
 }
 
 export default function CartDrawer() {
-  const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal, totalItems } = useCart();
-  const [promoCode, setPromoCode] = useState('');
+  const {
+    items, isOpen, closeCart, updateQuantity, removeItem,
+    subtotal, totalItems,
+    appliedPromo, promoError, applyPromo, removePromo,
+    discountAmount, discountedSubtotal,
+  } = useCart();
+
+  const [promoInput, setPromoInput] = useState('');
   const [showLegalPopup, setShowLegalPopup] = useState(false);
   const [gpSupported, setGpSupported] = useState(false);
+
+  // Pre-fill input with applied code if exists
+  useEffect(() => {
+    if (appliedPromo) setPromoInput(appliedPromo.code);
+  }, [appliedPromo]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).PaymentRequest) {
@@ -51,15 +62,33 @@ export default function CartDrawer() {
     }
   }, []);
 
-  const remaining150 = Math.max(0, FREE_STANDARD - subtotal);
-  const progressPct = Math.min(100, (subtotal / FREE_TWO_DAY) * 100);
+  // Use discounted subtotal for shipping thresholds
+  const effectiveSubtotal = discountedSubtotal;
+  const remaining150 = Math.max(0, FREE_STANDARD - effectiveSubtotal);
+  const progressPct = Math.min(100, (effectiveSubtotal / FREE_TWO_DAY) * 100);
 
   const shippingMsg =
-    subtotal >= FREE_TWO_DAY
+    effectiveSubtotal >= FREE_TWO_DAY
       ? 'You qualify for free 2-day shipping!'
-      : subtotal >= FREE_STANDARD
+      : effectiveSubtotal >= FREE_STANDARD
       ? 'You qualify for free standard shipping!'
       : null;
+
+  const handleApplyPromo = () => {
+    if (appliedPromo) return; // already applied
+    applyPromo(promoInput);
+  };
+
+  const handleRemovePromo = () => {
+    removePromo();
+    setPromoInput('');
+  };
+
+  const handlePromoInputChange = (val: string) => {
+    setPromoInput(val);
+    // Clear error when user starts typing
+    if (promoError) removePromo();
+  };
 
   const handleProceedToCheckout = () => {
     setShowLegalPopup(true);
@@ -77,7 +106,7 @@ export default function CartDrawer() {
 
   return (
     <>
-      {/* Overlay — covers everything: page, nav, banner. z-[200] > nav z-50 (50) and banner */}
+      {/* Overlay — covers everything: page, nav, banner. z-[200] > nav z-40 and banner z-30 */}
       <div
         className="fixed inset-0 transition-opacity duration-300 ease-in-out"
         style={{
@@ -202,26 +231,71 @@ export default function CartDrawer() {
             </div>
 
             {/* Promo code */}
-            <div className="flex gap-2">
-              <div className="flex-1 flex items-center border border-gray-200 rounded-lg px-3 gap-2 focus-within:border-[#1A3A4A] transition-colors">
-                <Tag size={13} className="text-gray-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Promo code"
-                  value={promoCode}
-                  onChange={e => setPromoCode(e.target.value)}
-                  className="flex-1 text-sm py-2 outline-none bg-transparent placeholder-gray-400"
-                />
-              </div>
-              <button className="px-4 py-2 text-sm font-semibold border border-gray-200 rounded-lg text-gray-600 hover:border-[#1A3A4A] hover:text-[#1A3A4A] transition-colors whitespace-nowrap">
-                Apply
-              </button>
+            <div className="space-y-1.5">
+              {appliedPromo ? (
+                /* Applied state */
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Check size={14} className="text-green-600 flex-shrink-0" />
+                    <span className="text-sm font-semibold text-green-700">{appliedPromo.code}</span>
+                    <span className="text-xs text-green-600">({appliedPromo.discount}% off applied)</span>
+                  </div>
+                  <button
+                    onClick={handleRemovePromo}
+                    className="text-green-400 hover:text-green-600 transition-colors ml-2"
+                    aria-label="Remove promo code"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                /* Input state */
+                <div className="flex gap-2">
+                  <div className="flex-1 flex items-center border border-gray-200 rounded-lg px-3 gap-2 focus-within:border-[#1A3A4A] transition-colors">
+                    <Tag size={13} className="text-gray-400 flex-shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Promo code"
+                      value={promoInput}
+                      onChange={e => handlePromoInputChange(e.target.value.toUpperCase())}
+                      onKeyDown={e => e.key === 'Enter' && handleApplyPromo()}
+                      className="flex-1 text-sm py-2 outline-none bg-transparent placeholder-gray-400 uppercase"
+                    />
+                  </div>
+                  <button
+                    onClick={handleApplyPromo}
+                    className="px-4 py-2 text-sm font-semibold border border-gray-200 rounded-lg text-gray-600 hover:border-[#1A3A4A] hover:text-[#1A3A4A] transition-colors whitespace-nowrap"
+                  >
+                    Apply
+                  </button>
+                </div>
+              )}
+              {/* Error message */}
+              {promoError && !appliedPromo && (
+                <p className="text-xs text-red-500 pl-1">{promoError}</p>
+              )}
             </div>
 
-            {/* Subtotal */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Subtotal</span>
-              <span className="text-base font-bold text-[#1A3A4A]">${subtotal.toFixed(2)}</span>
+            {/* Order summary */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Subtotal</span>
+                <span className={`text-sm font-medium ${appliedPromo ? 'line-through text-gray-400' : 'font-bold text-[#1A3A4A]'}`}>
+                  ${subtotal.toFixed(2)}
+                </span>
+              </div>
+              {appliedPromo && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-green-600 font-medium">Discount ({appliedPromo.code})</span>
+                  <span className="text-sm font-bold text-green-600">-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              {appliedPromo && (
+                <div className="flex items-center justify-between border-t border-gray-100 pt-1.5">
+                  <span className="text-sm font-bold text-[#1A3A4A]">New Subtotal</span>
+                  <span className="text-base font-bold text-[#1A3A4A]">${discountedSubtotal.toFixed(2)}</span>
+                </div>
+              )}
             </div>
 
             {/* Google Pay / Apple Pay */}

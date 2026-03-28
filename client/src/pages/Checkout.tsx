@@ -52,7 +52,7 @@ function genOrderNumber() {
 }
 
 export default function Checkout() {
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, appliedPromo, promoError, applyPromo, removePromo, discountAmount, discountedSubtotal } = useCart();
 
   const [step, setStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -81,7 +81,10 @@ export default function Checkout() {
 
   // Summary
   const [summaryOpen, setSummaryOpen] = useState(false);
-  const [promoCode, setPromoCode]     = useState('');
+  const [promoInput, setPromoInput]   = useState(() => {
+    // Pre-fill from applied promo if carried from cart
+    try { const p = localStorage.getItem('nocta-promo'); return p ? JSON.parse(p)?.code || '' : ''; } catch { return ''; }
+  });
 
   // Confirmation
   const [orderNumber, setOrderNumber]     = useState('');
@@ -89,9 +92,11 @@ export default function Checkout() {
   const [confirmedItems, setConfirmedItems] = useState<typeof items>([]);
 
   const selectedShipping = SHIPPING_OPTIONS.find(s => s.id === shippingId)!;
-  const shippingCost  = subtotal >= selectedShipping.freeAt ? 0 : selectedShipping.price;
-  const taxes         = parseFloat((subtotal * TAX_RATE).toFixed(2));
-  const orderTotal    = parseFloat((subtotal + shippingCost + taxes).toFixed(2));
+  // Shipping threshold uses discounted subtotal
+  const shippingCost  = discountedSubtotal >= selectedShipping.freeAt ? 0 : selectedShipping.price;
+  // Tax on discounted subtotal
+  const taxes         = parseFloat((discountedSubtotal * TAX_RATE).toFixed(2));
+  const orderTotal    = parseFloat((discountedSubtotal + shippingCost + taxes).toFixed(2));
 
   const today = new Date();
   const deliveryDates = useMemo(() => ({
@@ -568,14 +573,48 @@ export default function Checkout() {
                 </div>
               ))}
 
-              <div className="flex gap-2 pt-2">
-                <input type="text" placeholder="Promo code" value={promoCode} onChange={e => setPromoCode(e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#0D1F35]"/>
-                <button className="px-3 py-2 text-xs font-semibold border border-gray-200 rounded-lg text-gray-600 hover:border-[#0D1F35] hover:text-[#0D1F35] transition-colors">Apply</button>
+              {/* Promo code */}
+              <div className="pt-2 space-y-1.5">
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-1.5">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span className="text-xs font-semibold text-green-700">{appliedPromo.code}</span>
+                      <span className="text-xs text-green-600">({appliedPromo.discount}% off)</span>
+                    </div>
+                    <button onClick={() => { removePromo(); setPromoInput(''); }} className="text-green-400 hover:text-green-600 ml-2">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="Promo code" value={promoInput}
+                      onChange={e => { setPromoInput(e.target.value.toUpperCase()); if (promoError) removePromo(); }}
+                      onKeyDown={e => e.key === 'Enter' && applyPromo(promoInput)}
+                      className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#0D1F35] uppercase"/>
+                    <button onClick={() => applyPromo(promoInput)} className="px-3 py-2 text-xs font-semibold border border-gray-200 rounded-lg text-gray-600 hover:border-[#0D1F35] hover:text-[#0D1F35] transition-colors">Apply</button>
+                  </div>
+                )}
+                {promoError && !appliedPromo && <p className="text-xs text-red-500 pl-1">{promoError}</p>}
               </div>
 
               <div className="border-t border-gray-100 pt-3 space-y-2 text-sm">
-                <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between text-gray-500">
+                  <span>Subtotal</span>
+                  <span className={appliedPromo ? 'line-through text-gray-400' : ''}>${subtotal.toFixed(2)}</span>
+                </div>
+                {appliedPromo && (
+                  <>
+                    <div className="flex justify-between text-green-600 font-medium">
+                      <span>Discount ({appliedPromo.code})</span>
+                      <span>-${discountAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-700 font-semibold">
+                      <span>Discounted Subtotal</span>
+                      <span>${discountedSubtotal.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between text-gray-500">
                   <span>Shipping</span>
                   <span>{shippingCost===0 ? <span className="text-green-600 font-bold">Free</span> : `$${shippingCost.toFixed(2)}`}</span>

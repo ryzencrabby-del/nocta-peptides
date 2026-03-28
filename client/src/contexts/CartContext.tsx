@@ -8,6 +8,17 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface PromoCode {
+  code: string;
+  discount: number; // percentage e.g. 15 = 15%
+}
+
+const VALID_CODES: Record<string, number> = {
+  NOCTA15: 15,
+  WELCOME10: 10,
+  NOCTA20: 20,
+};
+
 interface CartContextType {
   items: CartItem[];
   isOpen: boolean;
@@ -19,6 +30,13 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   subtotal: number;
+  // Promo code
+  appliedPromo: PromoCode | null;
+  promoError: string;
+  applyPromo: (code: string) => boolean;
+  removePromo: () => void;
+  discountAmount: number;
+  discountedSubtotal: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -33,10 +51,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(() => {
+    try {
+      const saved = localStorage.getItem('nocta-promo');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [promoError, setPromoError] = useState('');
 
   useEffect(() => {
     localStorage.setItem('nocta-cart', JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    if (appliedPromo) {
+      localStorage.setItem('nocta-promo', JSON.stringify(appliedPromo));
+    } else {
+      localStorage.removeItem('nocta-promo');
+    }
+  }, [appliedPromo]);
 
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
@@ -72,16 +107,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+    setAppliedPromo(null);
+    setPromoError('');
+  };
+
+  const applyPromo = (code: string): boolean => {
+    const upper = code.trim().toUpperCase();
+    if (VALID_CODES[upper] !== undefined) {
+      setAppliedPromo({ code: upper, discount: VALID_CODES[upper] });
+      setPromoError('');
+      return true;
+    } else {
+      setPromoError('Invalid promo code');
+      return false;
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setPromoError('');
+  };
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const discountAmount = appliedPromo ? parseFloat(((subtotal * appliedPromo.discount) / 100).toFixed(2)) : 0;
+  const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
 
   return (
     <CartContext.Provider value={{
       items, isOpen, openCart, closeCart,
       addItem, removeItem, updateQuantity, clearCart,
       totalItems, subtotal,
+      appliedPromo, promoError, applyPromo, removePromo,
+      discountAmount, discountedSubtotal,
     }}>
       {children}
     </CartContext.Provider>

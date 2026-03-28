@@ -9,6 +9,7 @@ import ResearchBanner from "./components/ResearchBanner";
 import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
 import LegalPopup from "./components/LegalPopup";
+import WelcomePopup from "./components/WelcomePopup";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -52,6 +53,7 @@ function App() {
             <Toaster />
             <LegalPopup />
             <CartDrawer />
+            <WelcomePopup />
             <div className="flex flex-col min-h-screen">
               <ResearchBanner />
               <Navigation />
