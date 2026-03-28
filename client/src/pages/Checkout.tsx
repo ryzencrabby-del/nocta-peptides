@@ -113,7 +113,13 @@ export default function Checkout() {
   };
 
   const sendFormspreeNotification = async (num: string, itemsStr: string) => {
+    const shippingAddress = `${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`;
+    const cartItemsFormatted = items.map(i =>
+      `${i.product.name} ${i.selectedDose} x${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`
+    ).join('\n');
+
     return Promise.all([
+      // 1) Owner notification
       fetch('https://formspree.io/f/mzdkdzbw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -124,7 +130,7 @@ export default function Checkout() {
           customer_name: fullName,
           customer_email: email,
           customer_phone: phone,
-          shipping_address: `${street}, ${city}, ${stateVal} ${zip}`,
+          shipping_address: shippingAddress,
           items: itemsStr,
           shipping_method: selectedShipping.label,
           shipping_cost: `$${shippingCost.toFixed(2)}`,
@@ -135,15 +141,16 @@ export default function Checkout() {
           action_required: 'Customer has been redirected to NOWPayments to complete crypto payment. You will receive a separate confirmation email when payment is confirmed on the blockchain. No manual wallet address needed.',
         }),
       }),
+      // 2) Customer — order pending email (exact format specified)
       fetch('https://formspree.io/f/mzdkdzbw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
-          subject: `Your Nocta Peptides Order ${num} is Confirmed`,
+          subject: `Your Nocta Peptides Order ${num} — Payment Pending`,
           _replyto: email,
           name: fullName,
           email: email,
-          message: `Hi ${fullName},\n\nThank you for your order with Nocta Peptides!\n\nOrder Number: ${num}\nDate: ${new Date().toLocaleDateString()}\n\nITEMS ORDERED:\n${itemsStr}\n\nSubtotal: $${subtotal.toFixed(2)}\nShipping (${selectedShipping.label}): $${shippingCost.toFixed(2)}\nTax: $${taxes.toFixed(2)}\nTotal: $${orderTotal}\n\nPayment Method: ${selectedCrypto}\n\nYou will be redirected to our secure payment page to complete your crypto payment instantly.\n\nShipping Address:\n${street}, ${city}, ${stateVal} ${zip}\n\nExpected dispatch: 1-2 business days after payment confirmed.\n\nQuestions? Reply to this email or contact orders@noctapeptides.com\n\nThank you for choosing Nocta Peptides.\n\nThe Nocta Peptides Team\nnoctapeptides.com`,
+          message: `Hi ${fullName},\n\nThank you for your order with Nocta Peptides!\n\nOrder Number: ${num}\nDate: ${new Date().toLocaleDateString()}\n\nITEMS:\n${cartItemsFormatted}\n\nSubtotal: $${discountedSubtotal.toFixed(2)}\nShipping: $${shippingCost.toFixed(2)}\nTax: $${taxes.toFixed(2)}\nTotal: $${orderTotal}\n\nPayment Method: ${selectedCrypto}\n\nNEXT STEPS:\nYou have been redirected to complete your crypto payment. Once your payment is confirmed on the blockchain we will process and ship your order within 1-2 business days.\n\nShipping Address:\n${shippingAddress}\n\nQuestions? Email orders@noctapeptides.com\n\nThank you,\nNocta Peptides\nnoctapeptides.com`,
         }),
       }),
     ]).catch(err => console.error('Formspree error:', err));
@@ -197,7 +204,7 @@ export default function Checkout() {
       // Fire Formspree notification
       await sendFormspreeNotification(num, itemsStr);
 
-      // Create NOWPayments invoice
+      // Create NOWPayments invoice — also pass customer details for webhook order store
       const response = await fetch('/api/create-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -205,6 +212,15 @@ export default function Checkout() {
           orderTotal,
           orderNumber: num,
           selectedCrypto,
+          customerName: fullName,
+          customerEmail: email,
+          shippingAddress: `${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`,
+          items: items.map(i => ({
+            name: i.product.name,
+            dosage: i.selectedDose,
+            qty: i.quantity,
+            price: (i.price * i.quantity).toFixed(2),
+          })),
         }),
       });
 

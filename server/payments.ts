@@ -10,15 +10,40 @@ const CURRENCY_MAP: Record<string, string> = {
   LTC: "ltc",
 };
 
+// ─── In-memory order store ─────────────────────────────────────────────────
+// Keyed by order number. Stores customer details so the webhook can retrieve
+// them when NOWPayments fires the IPN callback.
+interface OrderDetails {
+  customerName: string;
+  customerEmail: string;
+  shippingAddress: string;
+  items: Array<{ name: string; dosage: string; qty: number; price: string }>;
+}
+
+const orderStore: Record<string, OrderDetails> = {};
+
 export function registerPaymentRoutes(app: Express) {
   // ─── POST /api/create-payment ─────────────────────────────────────────────
   // Creates a NOWPayments hosted invoice and returns the invoice URL.
+  // Also stores customer details in the in-memory order store for webhook use.
   app.post("/api/create-payment", async (req, res) => {
     try {
-      const { orderTotal, orderNumber, selectedCrypto } = req.body as {
+      const {
+        orderTotal,
+        orderNumber,
+        selectedCrypto,
+        customerName,
+        customerEmail,
+        shippingAddress,
+        items,
+      } = req.body as {
         orderTotal: number;
         orderNumber: string;
         selectedCrypto: string;
+        customerName?: string;
+        customerEmail?: string;
+        shippingAddress?: string;
+        items?: Array<{ name: string; dosage: string; qty: number; price: string }>;
       };
 
       if (!orderTotal || !orderNumber || !selectedCrypto) {
@@ -37,6 +62,17 @@ export function registerPaymentRoutes(app: Express) {
         console.error("[NOWPayments] NOWPAYMENTS_API_KEY not set");
         res.status(500).json({ error: "Payment service not configured" });
         return;
+      }
+
+      // Store customer details for webhook lookup
+      if (customerName && customerEmail) {
+        orderStore[orderNumber] = {
+          customerName,
+          customerEmail,
+          shippingAddress: shippingAddress || "",
+          items: items || [],
+        };
+        console.log(`[OrderStore] Stored details for order ${orderNumber}`);
       }
 
       const siteUrl = process.env.SITE_URL || "https://noctapeptides.com";
@@ -74,8 +110,8 @@ export function registerPaymentRoutes(app: Express) {
   });
 
   // ─── POST /api/payment-webhook ────────────────────────────────────────────
-  // Receives NOWPayments IPN callbacks and fires Formspree notification on
-  // confirmed/finished payments.
+  // Receives NOWPayments IPN callbacks.
+  // On confirmed/finished: fires owner notification + customer confirmed email.
   app.post("/api/payment-webhook", async (req, res) => {
     try {
       const payment = req.body as {
@@ -89,21 +125,55 @@ export function registerPaymentRoutes(app: Express) {
         payment.payment_status === "finished" ||
         payment.payment_status === "confirmed"
       ) {
-        await fetch("https://formspree.io/f/mzdkdzbw", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            subject: `Payment Confirmed — Order ${payment.order_id}`,
-            order_id: payment.order_id,
-            payment_status: payment.payment_status,
-            amount_paid: payment.actually_paid,
-            currency: payment.pay_currency,
-            message: `Payment confirmed for order ${payment.order_id}. Amount received: ${payment.actually_paid} ${payment.pay_currency}. Process and ship this order now.`,
+        // Retrieve customer details from order store
+        const orderDetails = payment.order_id ? orderStore[payment.order_id] : undefined;
+        const customerName = orderDetails?.customerName || "Customer";
+        const customerEmail = orderDetails?.customerEmail;
+
+        // Fire both emails in parallel
+        const emailPromises: Promise<unknown>[] = [
+          // 1) Owner notification
+          fetch("https://formspree.io/f/mzdkdzbw", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              subject: `Payment Confirmed — Order ${payment.order_id}`,
+              order_id: payment.order_id,
+              payment_status: payment.payment_status,
+              amount_paid: payment.actually_paid,
+              currency: payment.pay_currency,
+              customer_name: customerName,
+              customer_email: customerEmail || "unknown",
+              message: `Payment confirmed for order ${payment.order_id}. Amount received: ${payment.actually_paid} ${payment.pay_currency}. Customer: ${customerName} (${customerEmail || "unknown"}). Process and ship this order now.`,
+            }),
           }),
-        });
+        ];
+
+        // 2) Customer confirmed email (only if we have their email)
+        if (customerEmail) {
+          emailPromises.push(
+            fetch("https://formspree.io/f/mzdkdzbw", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({
+                subject: `Payment Confirmed — Order ${payment.order_id} is Being Processed`,
+                _replyto: customerEmail,
+                name: customerName,
+                email: customerEmail,
+                message: `Hi ${customerName},\n\nGreat news! Your payment has been confirmed on the blockchain.\n\nOrder Number: ${payment.order_id}\nPayment Received: ${payment.actually_paid} ${payment.pay_currency}\n\nYour order is now being processed and will ship within 1-2 business days. You will receive a tracking number once shipped.\n\nQuestions? Email orders@noctapeptides.com\n\nThank you,\nNocta Peptides\nnoctapeptides.com`,
+              }),
+            })
+          );
+        }
+
+        await Promise.all(emailPromises);
+        console.log(`[NOWPayments] Webhook processed for order ${payment.order_id}, status: ${payment.payment_status}`);
       }
 
       res.status(200).json({ status: "ok" });
