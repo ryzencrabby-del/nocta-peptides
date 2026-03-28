@@ -78,6 +78,8 @@ export default function Checkout() {
   const [paymentTab, setPaymentTab]       = useState<'crypto'|'card'|'express'>('crypto');
   const [selectedCrypto, setSelectedCrypto] = useState('');
   const [placeOrderError, setPlaceOrderError] = useState('');
+  const [isLoading, setIsLoading]           = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
 
   // Summary
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -110,6 +112,43 @@ export default function Checkout() {
     setStep(n + 1);
   };
 
+  const sendFormspreeNotification = async (num: string, itemsStr: string) => {
+    return Promise.all([
+      fetch('https://formspree.io/f/mzdkdzbw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          subject: `New Order ${num} — $${orderTotal}`,
+          order_number: num,
+          date: new Date().toLocaleDateString(),
+          customer_name: fullName,
+          customer_email: email,
+          customer_phone: phone,
+          shipping_address: `${street}, ${city}, ${stateVal} ${zip}`,
+          items: itemsStr,
+          shipping_method: selectedShipping.label,
+          shipping_cost: `$${shippingCost.toFixed(2)}`,
+          subtotal: `$${subtotal.toFixed(2)}`,
+          taxes: `$${taxes.toFixed(2)}`,
+          order_total: `$${orderTotal}`,
+          payment_method: selectedCrypto,
+          action_required: 'Customer has been redirected to NOWPayments to complete crypto payment. You will receive a separate confirmation email when payment is confirmed on the blockchain. No manual wallet address needed.',
+        }),
+      }),
+      fetch('https://formspree.io/f/mzdkdzbw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          subject: `Your Nocta Peptides Order ${num} is Confirmed`,
+          _replyto: email,
+          name: fullName,
+          email: email,
+          message: `Hi ${fullName},\n\nThank you for your order with Nocta Peptides!\n\nOrder Number: ${num}\nDate: ${new Date().toLocaleDateString()}\n\nITEMS ORDERED:\n${itemsStr}\n\nSubtotal: $${subtotal.toFixed(2)}\nShipping (${selectedShipping.label}): $${shippingCost.toFixed(2)}\nTax: $${taxes.toFixed(2)}\nTotal: $${orderTotal}\n\nPayment Method: ${selectedCrypto}\n\nYou will be redirected to our secure payment page to complete your crypto payment instantly.\n\nShipping Address:\n${street}, ${city}, ${stateVal} ${zip}\n\nExpected dispatch: 1-2 business days after payment confirmed.\n\nQuestions? Reply to this email or contact orders@noctapeptides.com\n\nThank you for choosing Nocta Peptides.\n\nThe Nocta Peptides Team\nnoctapeptides.com`,
+        }),
+      }),
+    ]).catch(err => console.error('Formspree error:', err));
+  };
+
   const handlePlaceOrder = async () => {
     if (paymentTab !== 'crypto') {
       setPlaceOrderError('Please select a payment method to continue.');
@@ -120,10 +159,10 @@ export default function Checkout() {
       return;
     }
     setPlaceOrderError('');
+    setIsLoading(true);
+    setLoadingMessage('Creating your secure payment page...');
 
     const num = genOrderNumber();
-    setOrderNumber(num);
-    setConfirmedItems([...items]);
 
     const itemsStr = items
       .map(i => `${i.product.name} ${i.selectedDose} x${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`)
@@ -154,44 +193,35 @@ export default function Checkout() {
       localStorage.setItem('nocta-orders', JSON.stringify(existing));
     } catch { /* ignore */ }
 
-    // Formspree — both simultaneously, never block confirmation
-    Promise.all([
-      fetch('https://formspree.io/f/mzdkdzbw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          subject: `New Order ${num} — $${orderTotal}`,
-          order_number: num,
-          date: new Date().toLocaleDateString(),
-          customer_name: fullName,
-          customer_email: email,
-          customer_phone: phone,
-          shipping_address: `${street}, ${city}, ${stateVal} ${zip}`,
-          items: itemsStr,
-          shipping_method: selectedShipping.label,
-          shipping_cost: `$${shippingCost.toFixed(2)}`,
-          subtotal: `$${subtotal.toFixed(2)}`,
-          taxes: `$${taxes.toFixed(2)}`,
-          order_total: `$${orderTotal}`,
-          payment_method: selectedCrypto,
-          action_required: `ACTION REQUIRED: Send ${selectedCrypto} wallet address to ${email}`,
-        }),
-      }),
-      fetch('https://formspree.io/f/mzdkdzbw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          subject: `Your Nocta Peptides Order ${num} is Confirmed`,
-          _replyto: email,
-          name: fullName,
-          email: email,
-          message: `Hi ${fullName},\n\nThank you for your order with Nocta Peptides!\n\nOrder Number: ${num}\nDate: ${new Date().toLocaleDateString()}\n\nITEMS ORDERED:\n${itemsStr}\n\nSubtotal: $${subtotal.toFixed(2)}\nShipping (${selectedShipping.label}): $${shippingCost.toFixed(2)}\nTax: $${taxes.toFixed(2)}\nTotal: $${orderTotal}\n\nPayment Method: ${selectedCrypto}\n\nNEXT STEPS:\nOur team will email you your ${selectedCrypto} wallet address and the exact payment amount within 1 hour. Please do not send any payment until you receive that email from our team.\n\nShipping Address:\n${street}, ${city}, ${stateVal} ${zip}\n\nExpected dispatch: 1-2 business days after payment confirmed.\n\nQuestions? Reply to this email or contact orders@noctapeptides.com\n\nThank you for choosing Nocta Peptides.\n\nThe Nocta Peptides Team\nnoctapeptides.com`,
-        }),
-      }),
-    ]).catch(err => console.error('Formspree error:', err));
+    try {
+      // Fire Formspree notification
+      await sendFormspreeNotification(num, itemsStr);
 
-    clearCart();
-    setOrderConfirmed(true);
+      // Create NOWPayments invoice
+      const response = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderTotal,
+          orderNumber: num,
+          selectedCrypto,
+        }),
+      });
+
+      const data = await response.json() as { invoiceUrl?: string; error?: string };
+
+      if (!data.invoiceUrl) {
+        throw new Error(data.error || 'No invoice URL returned');
+      }
+
+      clearCart();
+      // Redirect to NOWPayments hosted payment page
+      window.location.href = data.invoiceUrl;
+    } catch (err) {
+      console.error('Payment error:', err);
+      setIsLoading(false);
+      setPlaceOrderError('Payment setup failed. Please try again or contact orders@noctapeptides.com');
+    }
   };
 
   // ── Order Confirmation ──────────────────────────────────────────────────────
@@ -521,11 +551,9 @@ export default function Checkout() {
                       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-1.5">
                         <div className="flex items-center gap-2 mb-1">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                          <p className="text-sm font-semibold text-blue-800">Your order will be reserved for 30 minutes</p>
+                          <p className="text-sm font-semibold text-blue-800">Secure crypto payment</p>
                         </div>
-                        <p className="text-xs text-blue-700">After placing your order our team will email your wallet address and exact payment amount to <strong>{email || 'your email'}</strong> within 1 hour.</p>
-                        <p className="text-xs text-blue-700">Please do not send any payment until you receive our email with wallet instructions.</p>
-                        <p className="text-xs font-bold text-red-600">Do not send payment to any address not confirmed by our team via email.</p>
+                        <p className="text-xs text-blue-700">You will be redirected to our secure payment page to complete your crypto payment instantly.</p>
                       </div>
                     )}
                   </div>
@@ -544,8 +572,20 @@ export default function Checkout() {
 
                 {placeOrderError && <p className="text-red-500 text-xs font-medium">{placeOrderError}</p>}
 
-                <button onClick={handlePlaceOrder} className="w-full btn-navy py-4 rounded-xl font-bold text-base mt-2">
-                  Place Order
+                <button
+                  onClick={handlePlaceOrder}
+                  disabled={isLoading}
+                  className="w-full btn-navy py-4 rounded-xl font-bold text-base mt-2 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                      </svg>
+                      {loadingMessage}
+                    </>
+                  ) : 'Place Order'}
                 </button>
               </div>
             )}

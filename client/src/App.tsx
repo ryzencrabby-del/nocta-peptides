@@ -20,9 +20,10 @@ import Partner from "./pages/Partner";
 import Checkout from "./pages/Checkout";
 import Legal from "./pages/Legal";
 import About from "./pages/About";
+import OrderConfirmed from "./pages/OrderConfirmed";
 import NotFound from "./pages/NotFound";
-
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/disclaimer" component={Legal} />
       <Route path="/shipping" component={Legal} />
       <Route path="/about" component={About} />
+      <Route path="/order-confirmed" component={OrderConfirmed} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
