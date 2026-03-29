@@ -17,6 +17,7 @@ const VALID_CODES: Record<string, number> = {
   NOCTA15: 15,
   WELCOME10: 10,
   NOCTA20: 20,
+  RIGCHOK: 15,
 };
 
 interface CartContextType {
