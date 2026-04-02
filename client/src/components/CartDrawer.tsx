@@ -1,14 +1,21 @@
 // NOCTA PEPTIDES — Cart Drawer
 // Slides from right. Items with qty dropdown, shipping progress bar,
-// promo code with full validation, Google/Apple Pay button, Proceed to Checkout → fires pre-checkout legal popup.
+// promo code with full validation, Apple/Google Pay express checkout (Stripe),
+// and Proceed to Checkout → fires pre-checkout legal popup.
 
 import { useState, useEffect } from 'react';
 import { X, ShieldCheck, Tag, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import CheckoutLegalPopup from './CheckoutLegalPopup';
+import ExpressCheckout from './ExpressCheckout';
 
 const FREE_STANDARD = 150;
 const FREE_TWO_DAY = 175;
+const TAX_RATE = 0.08875;
+
+function generateOrderNumber(): string {
+  return `NP-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+}
 
 function addBusinessDays(date: Date, days: number): Date {
   const result = new Date(date);
@@ -35,35 +42,62 @@ export default function CartDrawer() {
     subtotal, totalItems,
     appliedPromo, promoError, applyPromo, removePromo,
     discountAmount, discountedSubtotal,
+    clearCart,
   } = useCart();
 
   const [promoInput, setPromoInput] = useState('');
   const [showLegalPopup, setShowLegalPopup] = useState(false);
-  const [gpSupported, setGpSupported] = useState(false);
+  const [expressOrderNumber] = useState(() => generateOrderNumber());
 
   // Pre-fill input with applied code if exists
   useEffect(() => {
     if (appliedPromo) setPromoInput(appliedPromo.code);
   }, [appliedPromo]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).PaymentRequest) {
-      try {
-        const req = new (window as any).PaymentRequest(
-          [{ supportedMethods: 'https://google.com/pay' }, { supportedMethods: 'https://apple.com/apple-pay' }],
-          { total: { label: 'Total', amount: { currency: 'USD', value: '1.00' } } }
-        );
-        req.canMakePayment()
-          .then((result: boolean) => setGpSupported(!!result))
-          .catch(() => setGpSupported(false));
-      } catch {
-        setGpSupported(false);
-      }
-    }
-  }, []);
-
   // Use discounted subtotal for shipping thresholds
   const effectiveSubtotal = discountedSubtotal;
+
+  // Calculate total for express checkout (includes tax, no shipping yet)
+  const taxAmount = discountedSubtotal * TAX_RATE;
+  const expressTotal = discountedSubtotal + taxAmount;
+
+  // Build items array for express checkout
+  const expressItems = items.map(i => ({
+    name: i.product.name,
+    dosage: i.selectedDose,
+    qty: i.quantity,
+    price: (i.price * i.quantity).toFixed(2),
+  }));
+
+  // ─── Express checkout success handler ────────────────────────────────────
+  const handleExpressSuccess = (payerEmail?: string, payerName?: string) => {
+    const order = {
+      orderNumber: expressOrderNumber,
+      date: new Date().toISOString(),
+      items: expressItems,
+      subtotal: discountedSubtotal,
+      tax: taxAmount,
+      total: expressTotal,
+      paymentMethod: 'express',
+      customerEmail: payerEmail || '',
+      customerName: payerName || '',
+      promoCode: appliedPromo?.code || null,
+      discountAmount: discountAmount,
+    };
+
+    try {
+      const existing = JSON.parse(localStorage.getItem('nocta-orders') || '[]');
+      existing.unshift(order);
+      localStorage.setItem('nocta-orders', JSON.stringify(existing.slice(0, 50)));
+      localStorage.setItem('nocta-last-order', JSON.stringify(order));
+    } catch (e) {
+      console.error('[Cart] Failed to save order to localStorage:', e);
+    }
+
+    clearCart();
+    closeCart();
+    window.location.href = '/order-confirmed';
+  };
   const remaining150 = Math.max(0, FREE_STANDARD - effectiveSubtotal);
   const progressPct = Math.min(100, (effectiveSubtotal / FREE_TWO_DAY) * 100);
 
@@ -298,23 +332,16 @@ export default function CartDrawer() {
               )}
             </div>
 
-            {/* Google Pay / Apple Pay */}
-            {gpSupported && (
-              <>
-                <button
-                  onClick={() => alert('Express checkout coming soon.')}
-                  className="w-full bg-black text-white py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-gray-900 transition-colors"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
-                  Google Pay / Apple Pay
-                </button>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-xs text-gray-400 font-medium">OR</span>
-                  <div className="flex-1 h-px bg-gray-200" />
-                </div>
-              </>
-            )}
+            {/* Express Checkout — Apple Pay / Google Pay via Stripe */}
+            {/* Returns null if browser doesn't support it — no empty space */}
+            <ExpressCheckout
+              orderTotal={expressTotal}
+              orderNumber={expressOrderNumber}
+              items={expressItems}
+              showDivider={true}
+              onSuccess={handleExpressSuccess}
+              onError={(msg) => console.error('[CartDrawer] Express checkout error:', msg)}
+            />
 
             {/* Proceed to Checkout */}
             <button

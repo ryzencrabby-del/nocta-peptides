@@ -2,21 +2,21 @@
 // Wraps Stripe Elements. VITE_STRIPE_PUBLISHABLE_KEY is the only key used here.
 // STRIPE_SECRET_KEY lives server-side only — never referenced in this file.
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Elements,
   CardElement,
-  PaymentRequestButtonElement,
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { loadStripe, PaymentRequest } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { Loader2, CreditCard, AlertCircle } from 'lucide-react';
+import ExpressCheckout from './ExpressCheckout';
 
 // Publishable key is safe to expose in frontend code
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
 
-interface StripeCardFormProps {
+export interface StripeCardFormProps {
   orderTotal: number;
   orderNumber: string;
   customerEmail: string;
@@ -43,80 +43,6 @@ function InnerCardForm({
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
-
-  // ─── Apple Pay / Google Pay setup ─────────────────────────────────────────
-  useEffect(() => {
-    if (!stripe) return;
-
-    const pr = stripe.paymentRequest({
-      country: 'US',
-      currency: 'usd',
-      total: {
-        label: `Nocta Peptides — Order ${orderNumber}`,
-        amount: Math.round(orderTotal * 100),
-      },
-      requestPayerName: true,
-      requestPayerEmail: true,
-    });
-
-    pr.canMakePayment().then(result => {
-      if (result) setPaymentRequest(pr);
-    });
-
-    pr.on('paymentmethod', async (ev) => {
-      setIsLoading(true);
-      setLoadingMessage('Processing your payment...');
-      setErrorMessage('');
-
-      try {
-        const response = await fetch('/api/create-payment-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderTotal, orderNumber, customerEmail, customerName, shippingAddress, items }),
-        });
-        const { clientSecret, error: serverError } = await response.json() as { clientSecret?: string; error?: string };
-
-        if (serverError || !clientSecret) {
-          ev.complete('fail');
-          setErrorMessage(serverError || 'Payment setup failed. Please try again.');
-          setIsLoading(false);
-          return;
-        }
-
-        const { error, paymentIntent } = await stripe.confirmCardPayment(
-          clientSecret,
-          { payment_method: ev.paymentMethod.id },
-          { handleActions: false }
-        );
-
-        if (error) {
-          ev.complete('fail');
-          setErrorMessage(error.message || 'Payment failed. Please try again.');
-          setIsLoading(false);
-          return;
-        }
-
-        ev.complete('success');
-
-        if (paymentIntent.status === 'requires_action') {
-          const { error: actionError } = await stripe.confirmCardPayment(clientSecret);
-          if (actionError) {
-            setErrorMessage(actionError.message || 'Payment authentication failed.');
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        await sendFormspreeNotification();
-        onSuccess();
-      } catch {
-        ev.complete('fail');
-        setErrorMessage('Payment failed. Please try again or contact orders@noctapeptides.com');
-        setIsLoading(false);
-      }
-    });
-  }, [stripe, orderTotal, orderNumber]);
 
   // ─── Formspree notification ────────────────────────────────────────────────
   const sendFormspreeNotification = async () => {
@@ -193,28 +119,18 @@ function InnerCardForm({
 
   return (
     <div className="space-y-4">
-      {/* Apple Pay / Google Pay */}
-      {paymentRequest && (
-        <div className="space-y-3">
-          <PaymentRequestButtonElement
-            options={{
-              paymentRequest,
-              style: {
-                paymentRequestButton: {
-                  type: 'buy',
-                  theme: 'dark',
-                  height: '48px',
-                },
-              },
-            }}
-          />
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-medium">OR</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-        </div>
-      )}
+      {/* Apple Pay / Google Pay — uses shared ExpressCheckout component */}
+      <ExpressCheckout
+        orderTotal={orderTotal}
+        orderNumber={orderNumber}
+        customerEmail={customerEmail}
+        customerName={customerName}
+        shippingAddress={shippingAddress}
+        items={items}
+        showDivider={true}
+        onSuccess={() => onSuccess()}
+        onError={(msg) => setErrorMessage(msg)}
+      />
 
       {/* Name on card */}
       <div>

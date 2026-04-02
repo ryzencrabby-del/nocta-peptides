@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -40,6 +41,16 @@ async function startServer() {
   registerOAuthRoutes(app);
   // NOWPayments routes
   registerPaymentRoutes(app);
+
+  // Apple Pay domain verification
+  app.get(
+    "/.well-known/apple-developer-merchantid-domain-association",
+    (req, res) => {
+      res.sendFile(
+        path.join(process.cwd(), "public", ".well-known", "apple-developer-merchantid-domain-association")
+      );
+    }
+  );
 
   // tRPC API
   app.use(
