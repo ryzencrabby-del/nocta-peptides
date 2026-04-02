@@ -9,6 +9,7 @@ import { Link } from 'wouter';
 import { ArrowLeft, Lock, CheckCircle2, ChevronDown, ShieldCheck, Mail } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import StripeCardForm from '@/components/StripeCardForm';
+import ExpressCheckout from '@/components/ExpressCheckout';
 
 const TAX_RATE = 0.08875;
 
@@ -84,7 +85,6 @@ export default function Checkout() {
   // Summary
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [promoInput, setPromoInput]   = useState(() => {
-    // Pre-fill from applied promo if carried from cart
     try { const p = localStorage.getItem('nocta-promo'); return p ? JSON.parse(p)?.code || '' : ''; } catch { return ''; }
   });
 
@@ -94,9 +94,7 @@ export default function Checkout() {
   const [confirmedItems, setConfirmedItems] = useState<typeof items>([]);
 
   const selectedShipping = SHIPPING_OPTIONS.find(s => s.id === shippingId)!;
-  // Shipping threshold uses discounted subtotal
   const shippingCost  = discountedSubtotal >= selectedShipping.freeAt ? 0 : selectedShipping.price;
-  // Tax on discounted subtotal
   const taxes         = parseFloat((discountedSubtotal * TAX_RATE).toFixed(2));
   const orderTotal    = parseFloat((discountedSubtotal + shippingCost + taxes).toFixed(2));
 
@@ -119,7 +117,6 @@ export default function Checkout() {
     ).join('\n');
 
     return Promise.all([
-      // 1) Owner notification
       fetch('https://formspree.io/f/mzdkdzbw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -141,7 +138,6 @@ export default function Checkout() {
           action_required: 'Customer has been redirected to NOWPayments to complete crypto payment. You will receive a separate confirmation email when payment is confirmed on the blockchain. No manual wallet address needed.',
         }),
       }),
-      // 2) Customer — order pending email (exact format specified)
       fetch('https://formspree.io/f/mzdkdzbw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -157,8 +153,12 @@ export default function Checkout() {
   };
 
   const handlePlaceOrder = async () => {
-    if (paymentTab !== 'crypto') {
-      setPlaceOrderError('Please select a payment method to continue.');
+    if (paymentTab === 'express') {
+      setPlaceOrderError('Please use the Apple Pay or Google Pay button above to complete express checkout.');
+      return;
+    }
+    if (paymentTab === 'card') {
+      setPlaceOrderError('Please complete your card payment using the form above.');
       return;
     }
     if (!selectedCrypto) {
@@ -175,7 +175,6 @@ export default function Checkout() {
       .map(i => `${i.product.name} ${i.selectedDose} x${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`)
       .join('\n');
 
-    // Save to localStorage
     try {
       const existing = JSON.parse(localStorage.getItem('nocta-orders') || '[]');
       existing.push({
@@ -201,10 +200,8 @@ export default function Checkout() {
     } catch { /* ignore */ }
 
     try {
-      // Fire Formspree notification
       await sendFormspreeNotification(num, itemsStr);
 
-      // Create NOWPayments invoice — also pass customer details for webhook order store
       const response = await fetch('/api/create-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -231,7 +228,6 @@ export default function Checkout() {
       }
 
       clearCart();
-      // Redirect to NOWPayments hosted payment page
       window.location.href = data.invoiceUrl;
     } catch (err) {
       console.error('Payment error:', err);
@@ -531,12 +527,12 @@ export default function Checkout() {
                   <Lock size={13}/> Secure checkout — 256-bit SSL
                 </div>
 
-                {/* Payment tabs */}
+                {/* Payment tabs — Express SOON badge removed */}
                 <div className="flex gap-2">
                   {[
-                    { id:'crypto', label:'Crypto', icon:'₿', soon:false },
-                    { id:'card',   label:'Card',   icon:'💳', soon:false },
-                    { id:'express',label:'Express',icon:'⚡', soon:true },
+                    { id:'crypto',  label:'Crypto',  icon:'₿',  soon:false },
+                    { id:'card',    label:'Card',    icon:'💳', soon:false },
+                    { id:'express', label:'Express', icon:'⚡', soon:false },
                   ].map(tab => (
                     <button key={tab.id} onClick={() => setPaymentTab(tab.id as any)}
                       className={`relative flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
@@ -544,7 +540,6 @@ export default function Checkout() {
                       }`}>
                       <span>{tab.icon}</span>
                       <span>{tab.label}</span>
-                      {tab.soon && <span className="absolute -top-2 -right-1 bg-gray-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">SOON</span>}
                     </button>
                   ))}
                 </div>
@@ -592,31 +587,55 @@ export default function Checkout() {
                   />
                 )}
 
-                {/* Express — coming soon */}
+                {/* Express — Apple Pay / Google Pay via Stripe */}
                 {paymentTab === 'express' && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 text-center space-y-2">
-                    <p className="font-semibold text-[#0D1F35] text-sm">Apple Pay and Google Pay coming soon</p>
-                    <p className="text-gray-500 text-sm">Please use cryptocurrency for now.</p>
+                  <div className="space-y-3">
+                    <ExpressCheckout
+                      orderTotal={orderTotal}
+                      orderNumber={genOrderNumber()}
+                      customerEmail={email}
+                      customerName={fullName}
+                      shippingAddress={`${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`}
+                      items={items.map(i => ({
+                        name: i.product.name,
+                        dosage: i.selectedDose,
+                        qty: i.quantity,
+                        price: (i.price * i.quantity).toFixed(2)
+                      }))}
+                      showDivider={false}
+                      onSuccess={(_payerEmail, _payerName) => {
+                        clearCart();
+                        const num = genOrderNumber();
+                        window.location.href = `/order-confirmed?order=${num}`;
+                      }}
+                      onError={(msg) => setPlaceOrderError(msg)}
+                    />
+                    <p className="text-center text-xs text-gray-400 mt-2">
+                      Apple Pay available on Safari · Google Pay available on Chrome
+                    </p>
                   </div>
                 )}
 
                 {placeOrderError && <p className="text-red-500 text-xs font-medium">{placeOrderError}</p>}
 
-                <button
-                  onClick={handlePlaceOrder}
-                  disabled={isLoading}
-                  className="w-full btn-navy py-4 rounded-xl font-bold text-base mt-2 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <>
-                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                      </svg>
-                      {loadingMessage}
-                    </>
-                  ) : 'Place Order'}
-                </button>
+                {/* Only show Place Order button for crypto tab */}
+                {paymentTab === 'crypto' && (
+                  <button
+                    onClick={handlePlaceOrder}
+                    disabled={isLoading}
+                    className="w-full btn-navy py-4 rounded-xl font-bold text-base mt-2 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        {loadingMessage}
+                      </>
+                    ) : 'Place Order'}
+                  </button>
+                )}
               </div>
             )}
           </div>
