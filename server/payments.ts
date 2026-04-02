@@ -1,7 +1,8 @@
-// NOCTA PEPTIDES — NOWPayments Integration
-// Server-side only. API key NEVER exposed to frontend.
+// NOCTA PEPTIDES — Payment Routes (NOWPayments + Stripe)
+// Server-side only. API keys NEVER exposed to frontend.
 
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
+import Stripe from "stripe";
 
 const CURRENCY_MAP: Record<string, string> = {
   BTC: "btc",
@@ -11,13 +12,14 @@ const CURRENCY_MAP: Record<string, string> = {
 };
 
 // ─── In-memory order store ─────────────────────────────────────────────────
-// Keyed by order number. Stores customer details so the webhook can retrieve
-// them when NOWPayments fires the IPN callback.
+// Keyed by order number. Stores customer details so webhooks can retrieve
+// them when NOWPayments or Stripe fires a callback.
 interface OrderDetails {
   customerName: string;
   customerEmail: string;
   shippingAddress: string;
   items: Array<{ name: string; dosage: string; qty: number; price: string }>;
+  orderTotal?: number;
 }
 
 const orderStore: Record<string, OrderDetails> = {};
@@ -25,8 +27,7 @@ const orderStore: Record<string, OrderDetails> = {};
 export function registerPaymentRoutes(app: Express) {
   // ─── POST /api/create-payment ─────────────────────────────────────────────
   // Creates a NOWPayments hosted invoice and returns the invoice URL.
-  // Also stores customer details in the in-memory order store for webhook use.
-  app.post("/api/create-payment", async (req, res) => {
+  app.post("/api/create-payment", async (req: Request, res: Response) => {
     try {
       const {
         orderTotal,
@@ -71,6 +72,7 @@ export function registerPaymentRoutes(app: Express) {
           customerEmail,
           shippingAddress: shippingAddress || "",
           items: items || [],
+          orderTotal,
         };
         console.log(`[OrderStore] Stored details for order ${orderNumber}`);
       }
@@ -94,7 +96,10 @@ export function registerPaymentRoutes(app: Express) {
         }),
       });
 
-      const invoice = await response.json() as { invoice_url?: string; message?: string };
+      const invoice = (await response.json()) as {
+        invoice_url?: string;
+        message?: string;
+      };
 
       if (!invoice.invoice_url) {
         console.error("[NOWPayments] Failed to create invoice:", invoice);
@@ -111,8 +116,7 @@ export function registerPaymentRoutes(app: Express) {
 
   // ─── POST /api/payment-webhook ────────────────────────────────────────────
   // Receives NOWPayments IPN callbacks.
-  // On confirmed/finished: fires owner notification + customer confirmed email.
-  app.post("/api/payment-webhook", async (req, res) => {
+  app.post("/api/payment-webhook", async (req: Request, res: Response) => {
     try {
       const payment = req.body as {
         payment_status?: string;
@@ -125,20 +129,16 @@ export function registerPaymentRoutes(app: Express) {
         payment.payment_status === "finished" ||
         payment.payment_status === "confirmed"
       ) {
-        // Retrieve customer details from order store
-        const orderDetails = payment.order_id ? orderStore[payment.order_id] : undefined;
+        const orderDetails = payment.order_id
+          ? orderStore[payment.order_id]
+          : undefined;
         const customerName = orderDetails?.customerName || "Customer";
         const customerEmail = orderDetails?.customerEmail;
 
-        // Fire both emails in parallel
         const emailPromises: Promise<unknown>[] = [
-          // 1) Owner notification
           fetch("https://formspree.io/f/mzdkdzbw", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
             body: JSON.stringify({
               subject: `Payment Confirmed — Order ${payment.order_id}`,
               order_id: payment.order_id,
@@ -152,15 +152,11 @@ export function registerPaymentRoutes(app: Express) {
           }),
         ];
 
-        // 2) Customer confirmed email (only if we have their email)
         if (customerEmail) {
           emailPromises.push(
             fetch("https://formspree.io/f/mzdkdzbw", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
               body: JSON.stringify({
                 subject: `Payment Confirmed — Order ${payment.order_id} is Being Processed`,
                 _replyto: customerEmail,
@@ -173,14 +169,172 @@ export function registerPaymentRoutes(app: Express) {
         }
 
         await Promise.all(emailPromises);
-        console.log(`[NOWPayments] Webhook processed for order ${payment.order_id}, status: ${payment.payment_status}`);
+        console.log(
+          `[NOWPayments] Webhook processed for order ${payment.order_id}, status: ${payment.payment_status}`
+        );
       }
 
       res.status(200).json({ status: "ok" });
     } catch (error) {
       console.error("[NOWPayments] webhook error:", error);
-      // Always return 200 to prevent NOWPayments from retrying
       res.status(200).json({ status: "ok" });
+    }
+  });
+
+  // ─── POST /api/create-payment-intent ─────────────────────────────────────
+  // Creates a Stripe PaymentIntent and returns the client secret.
+  // STRIPE_SECRET_KEY is server-side only — never sent to the browser.
+  app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
+    try {
+      const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+      if (!stripeSecretKey) {
+        console.error("[Stripe] STRIPE_SECRET_KEY not set");
+        res.status(500).json({ error: "Payment service not configured" });
+        return;
+      }
+
+      const stripe = new Stripe(stripeSecretKey);
+
+      const {
+        orderTotal,
+        orderNumber,
+        customerEmail,
+        customerName,
+        shippingAddress,
+        items,
+      } = req.body as {
+        orderTotal: number;
+        orderNumber: string;
+        customerEmail?: string;
+        customerName?: string;
+        shippingAddress?: string;
+        items?: Array<{ name: string; dosage: string; qty: number; price: string }>;
+      };
+
+      if (!orderTotal || !orderNumber) {
+        res.status(400).json({ error: "Missing required fields" });
+        return;
+      }
+
+      // Store customer details for webhook lookup
+      if (customerName && customerEmail) {
+        orderStore[orderNumber] = {
+          customerName,
+          customerEmail,
+          shippingAddress: shippingAddress || "",
+          items: items || [],
+          orderTotal,
+        };
+        console.log(`[OrderStore] Stored Stripe order details for ${orderNumber}`);
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(orderTotal * 100), // cents
+        currency: "usd",
+        receipt_email: customerEmail,
+        metadata: {
+          order_id: orderNumber,
+          customer_name: customerName || "",
+        },
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+      console.error("[Stripe] create-payment-intent error:", error);
+      res.status(500).json({ error: "Payment setup failed" });
+    }
+  });
+
+  // ─── POST /api/stripe/webhook ─────────────────────────────────────────────
+  // Receives Stripe webhook events. Must be registered with raw body parser
+  // (handled in _core/index.ts before express.json()).
+  app.post("/api/stripe/webhook", async (req: Request, res: Response) => {
+    try {
+      const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+      if (!stripeSecretKey) {
+        res.status(500).json({ error: "Stripe not configured" });
+        return;
+      }
+
+      const stripe = new Stripe(stripeSecretKey);
+      let event: Stripe.Event;
+
+      // Test event detection (required per Stripe integration spec)
+      const rawBody = req.body as Buffer | string;
+      const sig = req.headers["stripe-signature"] as string;
+
+      if (webhookSecret && sig) {
+        try {
+          event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+        } catch (err) {
+          console.error("[Stripe Webhook] Signature verification failed:", err);
+          res.status(400).json({ error: "Webhook signature verification failed" });
+          return;
+        }
+      } else {
+        // No webhook secret configured — parse body directly (dev/test mode)
+        event = (typeof rawBody === "string" ? JSON.parse(rawBody) : rawBody) as Stripe.Event;
+      }
+
+      // Handle test events
+      if (event.id.startsWith("evt_test_")) {
+        console.log("[Stripe Webhook] Test event detected, returning verification response");
+        res.json({ verified: true });
+        return;
+      }
+
+      if (event.type === "payment_intent.succeeded") {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        const orderId = pi.metadata?.order_id;
+        const orderDetails = orderId ? orderStore[orderId] : undefined;
+        const customerName = orderDetails?.customerName || pi.metadata?.customer_name || "Customer";
+        const customerEmail = orderDetails?.customerEmail || pi.receipt_email || undefined;
+        const amountPaid = (pi.amount_received / 100).toFixed(2);
+
+        console.log(`[Stripe Webhook] payment_intent.succeeded for order ${orderId}`);
+
+        const emailPromises: Promise<unknown>[] = [
+          // Owner notification
+          fetch("https://formspree.io/f/mzdkdzbw", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({
+              subject: `Card Payment Confirmed — Order ${orderId} — $${amountPaid}`,
+              order_id: orderId,
+              payment_method: "stripe-card",
+              amount_paid: amountPaid,
+              customer_name: customerName,
+              customer_email: customerEmail || "unknown",
+              message: `Card payment confirmed via Stripe. SHIP THIS ORDER NOW.\n\nOrder: ${orderId}\nAmount: $${amountPaid} USD\nCustomer: ${customerName} (${customerEmail || "unknown"})\nStripe PaymentIntent: ${pi.id}`,
+            }),
+          }),
+        ];
+
+        if (customerEmail) {
+          emailPromises.push(
+            fetch("https://formspree.io/f/mzdkdzbw", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({
+                subject: `Payment Confirmed — Order ${orderId} is Being Processed`,
+                _replyto: customerEmail,
+                name: customerName,
+                email: customerEmail,
+                message: `Hi ${customerName},\n\nGreat news! Your card payment has been confirmed.\n\nOrder Number: ${orderId}\nAmount Charged: $${amountPaid} USD\n\nYour order is now being processed and will ship within 1-2 business days. You will receive a tracking number once shipped.\n\nQuestions? Email orders@noctapeptides.com\n\nThank you,\nNocta Peptides\nnoctapeptides.com`,
+              }),
+            })
+          );
+        }
+
+        await Promise.all(emailPromises);
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error("[Stripe Webhook] error:", error);
+      res.status(200).json({ received: true });
     }
   });
 }

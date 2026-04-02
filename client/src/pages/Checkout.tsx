@@ -8,7 +8,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, Lock, CheckCircle2, ChevronDown, ShieldCheck, Mail } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
-import PaymentCardForm from '@/components/PaymentCardForm';
+import StripeCardForm from '@/components/StripeCardForm';
 
 const TAX_RATE = 0.08875;
 
@@ -535,7 +535,7 @@ export default function Checkout() {
                 <div className="flex gap-2">
                   {[
                     { id:'crypto', label:'Crypto', icon:'₿', soon:false },
-                    { id:'card',   label:'Card',   icon:'💳', soon:true },
+                    { id:'card',   label:'Card',   icon:'💳', soon:false },
                     { id:'express',label:'Express',icon:'⚡', soon:true },
                   ].map(tab => (
                     <button key={tab.id} onClick={() => setPaymentTab(tab.id as any)}
@@ -575,8 +575,22 @@ export default function Checkout() {
                   </div>
                 )}
 
-                {/* Card — coming soon, NO form fields */}
-                {paymentTab === 'card' && <PaymentCardForm />}
+                {/* Card — Stripe Elements (live) */}
+                {paymentTab === 'card' && (
+                  <StripeCardForm
+                    orderTotal={orderTotal}
+                    orderNumber={genOrderNumber()}
+                    customerEmail={email}
+                    customerName={fullName}
+                    shippingAddress={`${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`}
+                    items={items.map(i => ({ name: i.product.name, dosage: i.selectedDose, qty: i.quantity, price: (i.price * i.quantity).toFixed(2) }))}
+                    onSuccess={() => {
+                      clearCart();
+                      const num = genOrderNumber();
+                      window.location.href = `/order-confirmed?order=${num}`;
+                    }}
+                  />
+                )}
 
                 {/* Express — coming soon */}
                 {paymentTab === 'express' && (
