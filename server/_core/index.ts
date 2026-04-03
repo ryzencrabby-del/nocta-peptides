@@ -47,7 +47,7 @@ async function startServer() {
     "/.well-known/apple-developer-merchantid-domain-association",
     (req, res) => {
       res.sendFile(
-        path.join(process.cwd(), "public", ".well-known", "apple-developer-merchantid-domain-association")
+        path.join(process.cwd(), "client", "public", ".well-known", "apple-developer-merchantid-domain-association")
       );
     }
   );

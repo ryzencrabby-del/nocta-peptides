@@ -181,7 +181,7 @@ export default defineConfig({
     ],
     fs: {
       strict: true,
-      deny: ["**/.*"],
+      deny: ['**/.env', '**/.env.*', '**/.git/**', '**/*.{crt,pem}'],
     },
   },
 });

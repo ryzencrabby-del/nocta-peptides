@@ -5,13 +5,16 @@
 // Formspree notifications + localStorage order storage.
 
 import { useState, useMemo } from 'react';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { Link } from 'wouter';
 import { ArrowLeft, Lock, CheckCircle2, ChevronDown, ShieldCheck, Mail } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import StripeCardForm from '@/components/StripeCardForm';
-import ExpressCheckout from '@/components/ExpressCheckout';
+import ExpressCheckout, { InnerExpressCheckout } from '@/components/ExpressCheckout';
 
 const TAX_RATE = 0.08875;
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
 
 const SHIPPING_OPTIONS = [
   { id: 'standard', label: 'Standard Shipping', daysMin: 4, daysMax: 6, price: 4.99, freeAt: 150 },
@@ -570,51 +573,53 @@ export default function Checkout() {
                   </div>
                 )}
 
-                {/* Card — Stripe Elements (live) */}
-                {paymentTab === 'card' && (
-                  <StripeCardForm
-                    orderTotal={orderTotal}
-                    orderNumber={genOrderNumber()}
-                    customerEmail={email}
-                    customerName={fullName}
-                    shippingAddress={`${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`}
-                    items={items.map(i => ({ name: i.product.name, dosage: i.selectedDose, qty: i.quantity, price: (i.price * i.quantity).toFixed(2) }))}
-                    onSuccess={() => {
-                      clearCart();
-                      const num = genOrderNumber();
-                      window.location.href = `/order-confirmed?order=${num}`;
-                    }}
-                  />
-                )}
-
-                {/* Express — Apple Pay / Google Pay via Stripe */}
-                {paymentTab === 'express' && (
-                  <div className="space-y-3">
-                    <ExpressCheckout
+                <Elements stripe={stripePromise}>
+                  {/* Card — Stripe Elements (live) */}
+                  {paymentTab === 'card' && (
+                    <StripeCardForm
                       orderTotal={orderTotal}
                       orderNumber={genOrderNumber()}
                       customerEmail={email}
                       customerName={fullName}
                       shippingAddress={`${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`}
-                      items={items.map(i => ({
-                        name: i.product.name,
-                        dosage: i.selectedDose,
-                        qty: i.quantity,
-                        price: (i.price * i.quantity).toFixed(2)
-                      }))}
-                      showDivider={false}
-                      onSuccess={(_payerEmail, _payerName) => {
+                      items={items.map(i => ({ name: i.product.name, dosage: i.selectedDose, qty: i.quantity, price: (i.price * i.quantity).toFixed(2) }))}
+                      onSuccess={() => {
                         clearCart();
                         const num = genOrderNumber();
                         window.location.href = `/order-confirmed?order=${num}`;
                       }}
-                      onError={(msg) => setPlaceOrderError(msg)}
                     />
-                    <p className="text-center text-xs text-gray-400 mt-2">
-                      Apple Pay available on Safari · Google Pay available on Chrome
-                    </p>
-                  </div>
-                )}
+                  )}
+
+                  {/* Express — Apple Pay / Google Pay via Stripe */}
+                  {paymentTab === 'express' && (
+                    <div className="space-y-3">
+                      <InnerExpressCheckout
+                        orderTotal={orderTotal}
+                        orderNumber={genOrderNumber()}
+                        customerEmail={email}
+                        customerName={fullName}
+                        shippingAddress={`${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`}
+                        items={items.map(i => ({
+                          name: i.product.name,
+                          dosage: i.selectedDose,
+                          qty: i.quantity,
+                          price: (i.price * i.quantity).toFixed(2)
+                        }))}
+                        showDivider={false}
+                        onSuccess={(_payerEmail, _payerName) => {
+                          clearCart();
+                          const num = genOrderNumber();
+                          window.location.href = `/order-confirmed?order=${num}`;
+                        }}
+                        onError={(msg) => setPlaceOrderError(msg)}
+                      />
+                      <p className="text-center text-xs text-gray-400 mt-2">
+                        Apple Pay available on Safari · Google Pay available on Chrome
+                      </p>
+                    </div>
+                  )}
+                </Elements>
 
                 {placeOrderError && <p className="text-red-500 text-xs font-medium">{placeOrderError}</p>}
 

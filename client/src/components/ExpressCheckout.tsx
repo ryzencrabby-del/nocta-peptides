@@ -21,7 +21,7 @@ export interface ExpressCheckoutProps {
   showDivider?: boolean;
 }
 
-function InnerExpressCheckout({
+export function InnerExpressCheckout({
   orderTotal,
   orderNumber,
   customerEmail,
@@ -156,9 +156,5 @@ function InnerExpressCheckout({
 }
 
 export default function ExpressCheckout(props: ExpressCheckoutProps) {
-  return (
-    <Elements stripe={stripePromise}>
-      <InnerExpressCheckout {...props} />
-    </Elements>
-  );
+  return <InnerExpressCheckout {...props} />;
 }
