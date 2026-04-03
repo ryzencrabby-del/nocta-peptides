@@ -13,7 +13,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Loader2, CreditCard, AlertCircle } from 'lucide-react';
 import ExpressCheckout, { InnerExpressCheckout } from './ExpressCheckout';
 
-// Publishable key is provided via Elements provider in parent component
+// Publishable key is safe to expose in frontend code
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
 
 export interface StripeCardFormProps {
   orderTotal: number;
@@ -206,5 +207,9 @@ function InnerCardForm({
 
 // ─── Exported component ─────────────────────────────────────────────────────
 export default function StripeCardForm(props: StripeCardFormProps) {
-  return <InnerCardForm {...props} />;
+  return (
+    <Elements stripe={stripePromise}>
+      <InnerCardForm {...props} />
+    </Elements>
+  );
 }

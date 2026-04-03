@@ -156,5 +156,9 @@ export function InnerExpressCheckout({
 }
 
 export default function ExpressCheckout(props: ExpressCheckoutProps) {
-  return <InnerExpressCheckout {...props} />;
+  return (
+    <Elements stripe={stripePromise}>
+      <InnerExpressCheckout {...props} />
+    </Elements>
+  );
 }
