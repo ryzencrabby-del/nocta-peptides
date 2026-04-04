@@ -47,7 +47,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem('nocta-cart');
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Sanitize items to prevent NaN poisoning
+      return parsed.filter(i => 
+        i && 
+        i.product && 
+        typeof i.price === 'number' && 
+        !isNaN(i.price) &&
+        typeof i.quantity === 'number' && 
+        !isNaN(i.quantity)
+      );
     } catch {
       return [];
     }
@@ -132,10 +144,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setPromoError('');
   };
 
-  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const totalItems = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
+  const subtotal = items.reduce((sum, i) => sum + (Number(i.price) || 0) * (Number(i.quantity) || 0), 0);
   const discountAmount = appliedPromo ? parseFloat(((subtotal * appliedPromo.discount) / 100).toFixed(2)) : 0;
-  const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
+  const discountedSubtotal = Math.max(0, parseFloat((subtotal - discountAmount).toFixed(2)));
 
   return (
     <CartContext.Provider value={{

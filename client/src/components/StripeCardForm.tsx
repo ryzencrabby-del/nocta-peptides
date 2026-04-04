@@ -126,8 +126,20 @@ export default function StripeCardForm(props: StripeCardFormProps) {
         items: props.items,
       }),
     })
-      .then((res) => res.json())
-      .then((data) => setClientSecret(data.clientSecret));
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to create payment intent');
+        return res.json();
+      })
+      .then((data) => {
+        if (data.clientSecret) {
+          setClientSecret(data.clientSecret);
+        } else {
+          console.error('No client secret returned:', data);
+        }
+      })
+      .catch(err => {
+        console.error('Payment intent error:', err);
+      });
   }, [props.orderTotal, props.orderNumber]);
 
   if (!clientSecret) {
