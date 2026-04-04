@@ -239,9 +239,13 @@ export function registerPaymentRoutes(app: Express) {
       });
 
       res.json({ clientSecret: paymentIntent.client_secret });
-    } catch (error) {
+    } catch (error: any) {
       console.error("[Stripe] create-payment-intent error:", error);
-      res.status(500).json({ error: "Payment setup failed" });
+      res.status(500).json({ 
+        error: "Payment setup failed", 
+        details: error.message,
+        type: error.type 
+      });
     }
   });
 
