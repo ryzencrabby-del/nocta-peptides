@@ -137,7 +137,8 @@ export default function ExpressCheckout(props: ExpressCheckoutProps) {
             colorPrimary: '#1A3A4A',
             borderRadius: '10px',
           },
-        }
+        },
+        paymentMethodCreation: 'manual', // Important for Link stability
       }}
     >
       <InnerExpressCheckout {...props} />

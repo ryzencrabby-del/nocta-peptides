@@ -193,7 +193,13 @@ export function registerPaymentRoutes(app: Express) {
         return;
       }
 
-      const stripe = new Stripe(stripeSecretKey);
+      // Explicitly check for live key to ensure we are in production
+      const isLive = stripeSecretKey.startsWith('sk_live_');
+      console.log(`[Stripe] Initializing in ${isLive ? 'LIVE' : 'TEST'} mode`);
+
+      const stripe = new Stripe(stripeSecretKey, {
+        apiVersion: '2025-01-27.acacia', // Use a stable version
+      });
 
       const {
         orderTotal,
