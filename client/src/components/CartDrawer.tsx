@@ -332,24 +332,25 @@ export default function CartDrawer() {
               )}
             </div>
 
-            {/* Express Checkout — Apple Pay / Google Pay via Stripe */}
-            {/* Returns null if browser doesn't support it — no empty space */}
-            <ExpressCheckout
-              orderTotal={expressTotal}
-              orderNumber={expressOrderNumber}
-              items={expressItems}
-              showDivider={true}
-              onSuccess={handleExpressSuccess}
-              onError={(msg) => console.error('[CartDrawer] Express checkout error:', msg)}
-            />
+            {/* Express Checkout — Apple Pay / Google Pay / Link via Stripe */}
+            <div className="pt-2">
+              <ExpressCheckout
+                orderTotal={expressTotal}
+                orderNumber={expressOrderNumber}
+                items={expressItems}
+                showDivider={true}
+                onSuccess={handleExpressSuccess}
+                onError={(msg) => console.error('[CartDrawer] Express checkout error:', msg)}
+              />
 
-            {/* Proceed to Checkout */}
-            <button
-              onClick={handleProceedToCheckout}
-              className="w-full btn-navy py-3.5 rounded-xl font-bold text-sm"
-            >
-              Proceed to Checkout
-            </button>
+              {/* Proceed to Checkout */}
+              <button
+                onClick={handleProceedToCheckout}
+                className="w-full bg-[#1A3A4A] text-white py-4 rounded-xl font-bold text-sm hover:bg-[#0D2535] transition-all shadow-sm active:scale-[0.98]"
+              >
+                Proceed to Checkout
+              </button>
+            </div>
 
             {/* Packing estimate */}
             <p className="text-center text-[11px] text-gray-400">

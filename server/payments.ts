@@ -238,6 +238,7 @@ export function registerPaymentRoutes(app: Express) {
         },
         automatic_payment_methods: {
           enabled: true,
+          allow_redirects: "always",
         },
       });
 

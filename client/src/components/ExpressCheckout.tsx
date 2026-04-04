@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import {
   Elements,
-  PaymentRequestButtonElement,
+  ExpressCheckoutElement,
   useStripe,
+  useElements,
 } from '@stripe/react-stripe-js';
-import { loadStripe, PaymentRequest } from '@stripe/stripe-js';
-import { Loader2, AlertCircle, Apple, Smartphone } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
 
@@ -26,156 +27,60 @@ function InnerExpressCheckout({
   orderNumber,
   customerEmail,
   customerName,
-  shippingAddress,
-  items,
   onSuccess,
   onError,
   showDivider = true,
 }: ExpressCheckoutProps) {
   const stripe = useStripe();
-  const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
-  const [canMakePayment, setCanMakePayment] = useState<boolean | null>(null);
+  const elements = useElements();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    if (!stripe) return;
+  const onConfirm = async () => {
+    if (!stripe || !elements) return;
 
-    const pr = stripe.paymentRequest({
-      country: 'US',
-      currency: 'usd',
-      total: {
-        label: `Nocta Peptides — Order ${orderNumber}`,
-        amount: Math.round(orderTotal * 100),
+    setIsLoading(true);
+    setErrorMessage('');
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/order-confirmed?order=${orderNumber}`,
       },
-      requestPayerName: true,
-      requestPayerEmail: true,
     });
 
-    pr.canMakePayment().then((result) => {
-      if (result) {
-        setPaymentRequest(pr);
-        setCanMakePayment(true);
-      } else {
-        setCanMakePayment(false);
-      }
-    });
-
-    pr.on('paymentmethod', async (ev) => {
-      const resolvedEmail = customerEmail || ev.payerEmail || '';
-      const resolvedName = customerName || ev.payerName || '';
-
-      try {
-        const response = await fetch('/api/create-payment-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderTotal,
-            orderNumber,
-            customerEmail: resolvedEmail,
-            customerName: resolvedName,
-            shippingAddress: shippingAddress || '',
-            items: items || []
-          }),
-        });
-
-        const { clientSecret, error: serverError } = await response.json() as { clientSecret?: string; error?: string };
-
-        if (serverError || !clientSecret) {
-          ev.complete('fail');
-          onError?.(serverError || 'Payment setup failed.');
-          return;
-        }
-
-        const { error, paymentIntent } = await stripe.confirmCardPayment(
-          clientSecret,
-          { payment_method: ev.paymentMethod.id },
-          { handleActions: false }
-        );
-
-        if (error) {
-          ev.complete('fail');
-          onError?.(error.message || 'Payment failed.');
-          return;
-        }
-
-        ev.complete('success');
-
-        if (paymentIntent.status === 'requires_action') {
-          const { error: actionError } = await stripe.confirmCardPayment(clientSecret);
-          if (actionError) {
-            onError?.(actionError.message || 'Authentication failed.');
-            return;
-          }
-        }
-
-        try {
-          await fetch('https://formspree.io/f/mzdkdzbw', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-            body: JSON.stringify({
-              subject: `Express Payment Confirmed — Order ${orderNumber} — $${orderTotal.toFixed(2)}`,
-              _replyto: resolvedEmail,
-              name: resolvedName,
-              email: resolvedEmail,
-              message: `Express checkout confirmed.\n\nOrder: ${orderNumber}\nAmount: $${orderTotal.toFixed(2)}\nCustomer: ${resolvedName} (${resolvedEmail})\n\nSHIP THIS ORDER NOW.`,
-            }),
-          });
-        } catch (e) {
-          console.error('[Formspree] failed:', e);
-        }
-
-        onSuccess(resolvedEmail, resolvedName);
-      } catch (err) {
-        ev.complete('fail');
-        onError?.('Payment failed. Please try again.');
-      }
-    });
-  }, [stripe, orderTotal, orderNumber]);
-
-  if (canMakePayment === null) {
-    return (
-      <div className="flex items-center justify-center py-6">
-        <Loader2 className="w-6 h-6 animate-spin text-[#1A3A4A]" />
-      </div>
-    );
-  }
-
-  if (canMakePayment === false) {
-    return (
-      <div className="p-6 bg-gray-50 border border-gray-100 rounded-xl text-center space-y-3">
-        <div className="flex justify-center gap-4 text-gray-300">
-          <Apple size={32} />
-          <Smartphone size={32} />
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm font-bold text-[#1A3A4A]">Express Checkout Unavailable</p>
-          <p className="text-xs text-gray-500 leading-relaxed">
-            Apple Pay is available on Safari. Google Pay is available on Chrome. 
-            Please ensure you have a card set up in your browser or use the Card tab instead.
-          </p>
-        </div>
-      </div>
-    );
-  }
+    if (error) {
+      setErrorMessage(error.message || 'An unexpected error occurred.');
+      onError?.(error.message || 'Payment failed');
+      setIsLoading(false);
+    } else {
+      onSuccess(customerEmail, customerName);
+    }
+  };
 
   return (
-    <div>
-      <PaymentRequestButtonElement
-        options={{
-          paymentRequest: paymentRequest!,
-          style: {
-            paymentRequestButton: {
-              type: 'buy',
-              theme: 'dark',
-              height: '48px',
-            },
-          },
-        }}
-      />
+    <div className="space-y-4">
+      {errorMessage && (
+        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-red-700">{errorMessage}</p>
+        </div>
+      )}
+      
+      <div className="min-h-[48px] relative">
+        <ExpressCheckoutElement onConfirm={onConfirm} />
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10 rounded-lg">
+            <Loader2 className="w-6 h-6 animate-spin text-[#1A3A4A]" />
+          </div>
+        )}
+      </div>
+
       {showDivider && (
-        <div className="flex items-center gap-3 mt-3">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-xs text-gray-400 font-medium">OR</span>
-          <div className="flex-1 h-px bg-gray-200" />
+        <div className="relative flex items-center py-2">
+          <div className="flex-grow border-t border-gray-100"></div>
+          <span className="flex-shrink mx-3 text-[10px] text-gray-400 font-bold tracking-widest uppercase">Or</span>
+          <div className="flex-grow border-t border-gray-100"></div>
         </div>
       )}
     </div>
@@ -183,8 +88,58 @@ function InnerExpressCheckout({
 }
 
 export default function ExpressCheckout(props: ExpressCheckoutProps) {
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderTotal: props.orderTotal,
+        orderNumber: props.orderNumber,
+        customerEmail: props.customerEmail,
+        customerName: props.customerName,
+        shippingAddress: props.shippingAddress,
+        items: props.items,
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.details || data.error || 'Failed to initialize payment');
+        return data;
+      })
+      .then((data) => {
+        if (data.clientSecret) {
+          setClientSecret(data.clientSecret);
+        } else {
+          throw new Error('No client secret received from server');
+        }
+      })
+      .catch(err => {
+        console.error('Express initialization error:', err);
+        setError(err.message);
+      });
+  }, [props.orderTotal, props.orderNumber]);
+
+  if (error || !clientSecret) {
+    return null; // Don't show anything if initialization fails or is loading in sidebar
+  }
+
   return (
-    <Elements stripe={stripePromise}>
+    <Elements 
+      stripe={stripePromise} 
+      options={{ 
+        clientSecret,
+        appearance: {
+          theme: 'stripe',
+          variables: {
+            colorPrimary: '#1A3A4A',
+            borderRadius: '10px',
+          },
+        }
+      }}
+    >
       <InnerExpressCheckout {...props} />
     </Elements>
   );
