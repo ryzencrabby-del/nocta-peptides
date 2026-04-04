@@ -419,7 +419,7 @@ export const PRODUCTS: Product[] = [
     imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/glow-blend-v2-70mg.webp',
     purity: '99%+',
     shortDesc: 'BPC-157 + GHK-Cu + TB-500 anti-aging and recovery research stack.',
-    description: 'The Glow Blend combines BPC-157, GHK-Cu, and TB-500 for comprehensive anti-aging and recovery research. BPC-157 supports tissue repair and gut health, GHK-Cu stimulates collagen synthesis and skin regeneration, while TB-500 accelerates healing and reduces inflammation.',
+    description: 'The Glow Blend combines BPC-157, GHK-Cu, and TB-500 for comprehensive anti-aging and recovery research. BPC-157 supports tissue repair and gut health, GHK-Cu stimulates collagen synthesis and skin regeneration, while TB-500 accelerates healing and reduces inflammation. A powerful combination for longevity and recovery research.',
     variants: [
       { dose: '70mg', price: 129.99 },
     ],
@@ -435,7 +435,7 @@ export const PRODUCTS: Product[] = [
     imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/klow-blend-v2-80mg.webp',
     purity: '99%+',
     shortDesc: 'KPV + low-dose GLP-3 RT for gut health and metabolic research.',
-    description: 'The KLOW Blend combines KPV and low-dose GLP-3 RT for comprehensive gut health and metabolic research. KPV provides powerful anti-inflammatory support while GLP-3 RT regulates appetite and metabolic function.',
+    description: 'The KLOW Blend combines KPV and low-dose GLP-3 RT for comprehensive gut health and metabolic research. KPV provides powerful anti-inflammatory support for the gut lining while GLP-3 RT regulates appetite and metabolic function. A targeted combination for digestive health and body composition research.',
     variants: [
       { dose: '80mg', price: 144.99 },
     ],

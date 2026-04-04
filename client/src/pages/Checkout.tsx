@@ -9,8 +9,11 @@ import { useState, useMemo } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, Lock, CheckCircle2, ChevronDown, ShieldCheck, Mail } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
-import StripeCardForm from '@/components/StripeCardForm';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import ExpressCheckout from '@/components/ExpressCheckout';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
 
 const TAX_RATE = 0.08875;
 
@@ -53,6 +56,142 @@ function genOrderNumber() {
   return 'NP' + Math.floor(10000 + Math.random() * 90000);
 }
 
+function CheckoutCardForm({
+  orderTotal,
+  orderNumber,
+  customerEmail,
+  customerName,
+  shippingAddress,
+  items,
+  onSuccess,
+}: {
+  orderTotal: number
+  orderNumber: string
+  customerEmail: string
+  customerName: string
+  shippingAddress: string
+  items: Array<{ name: string; dosage: string; qty: number; price: string }>
+  onSuccess: () => void
+}) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [nameOnCard, setNameOnCard] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const handlePay = async () => {
+    if (!stripe || !elements) return
+    const cardElement = elements.getElement(CardElement)
+    if (!cardElement) return
+    if (!nameOnCard.trim()) {
+      setErrorMessage('Please enter the name on your card.')
+      return
+    }
+    setIsLoading(true)
+    setErrorMessage('')
+    try {
+      const res = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderTotal,
+          orderNumber,
+          customerEmail,
+          customerName,
+          shippingAddress,
+          items,
+        }),
+      })
+      const { clientSecret, error: serverError } = await res.json()
+      if (serverError || !clientSecret) {
+        setErrorMessage(serverError || 'Payment setup failed. Please try again.')
+        setIsLoading(false)
+        return
+      }
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: { name: nameOnCard, email: customerEmail },
+        },
+      })
+      if (result.error) {
+        setErrorMessage(result.error.message || 'Payment failed. Please check your card details.')
+        setIsLoading(false)
+      } else if (result.paymentIntent.status === 'succeeded') {
+        await fetch('https://formspree.io/f/mzdkdzbw', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            subject: `Card Payment Confirmed — Order ${orderNumber} — $${orderTotal.toFixed(2)}`,
+            _replyto: customerEmail,
+            name: customerName,
+            email: customerEmail,
+            message: `Card payment confirmed via Stripe. SHIP THIS ORDER NOW.\n\nOrder: ${orderNumber}\nAmount: $${orderTotal.toFixed(2)}\nCustomer: ${customerName} (${customerEmail})\nShipping: ${shippingAddress}\n\nItems:\n${items.map(i => `${i.name} ${i.dosage} x${i.qty} — $${i.price}`).join('\n')}`,
+          }),
+        })
+        onSuccess()
+      }
+    } catch {
+      setErrorMessage('Payment failed. Please try again or contact orders@noctapeptides.com')
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+          Name on Card
+        </label>
+        <input
+          type="text"
+          value={nameOnCard}
+          onChange={e => setNameOnCard(e.target.value)}
+          placeholder="Full name as it appears on card"
+          disabled={isLoading}
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A4A] disabled:opacity-50"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+          Card Details
+        </label>
+        <div className="px-3 py-3 border border-gray-200 rounded-lg focus-within:ring-2 focus-within:ring-[#1A3A4A] transition-all">
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontSize: '14px',
+                  color: '#1A3A4A',
+                  fontFamily: 'Inter, sans-serif',
+                  '::placeholder': { color: '#9ca3af' },
+                },
+                invalid: { color: '#ef4444' },
+              },
+              hidePostalCode: false,
+            }}
+          />
+        </div>
+      </div>
+      {errorMessage && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-700">{errorMessage}</p>
+        </div>
+      )}
+      <button
+        onClick={handlePay}
+        disabled={isLoading || !stripe}
+        className="w-full bg-[#1A3A4A] text-white py-3.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#0D2535] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isLoading ? 'Processing...' : `Pay Now — $${orderTotal.toFixed(2)}`}
+      </button>
+      <p className="text-center text-xs text-gray-400">
+        🔒 Secured by Stripe. Your card details are never stored on our servers.
+      </p>
+    </div>
+  )
+}
+
 export default function Checkout() {
   const { items, subtotal, clearCart, appliedPromo, promoError, applyPromo, removePromo, discountAmount, discountedSubtotal } = useCart();
 
@@ -77,7 +216,7 @@ export default function Checkout() {
   const [shippingId, setShippingId] = useState('standard');
 
   // Step 3
-  const [paymentTab, setPaymentTab]       = useState<'crypto'|'card'|'express'>('crypto');
+  const [paymentTab, setPaymentTab]       = useState<'crypto'|'card'>('crypto');
   const [selectedCrypto, setSelectedCrypto] = useState('');
   const [placeOrderError, setPlaceOrderError] = useState('');
   const [isLoading, setIsLoading]           = useState(false);
@@ -154,10 +293,6 @@ export default function Checkout() {
   };
 
   const handlePlaceOrder = async () => {
-    if (paymentTab === 'express') {
-      setPlaceOrderError('Please use the Apple Pay or Google Pay button above to complete express checkout.');
-      return;
-    }
     if (paymentTab === 'card') {
       setPlaceOrderError('Please complete your card payment using the form above.');
       return;
@@ -245,218 +380,149 @@ export default function Checkout() {
         <div className="bg-white rounded-2xl shadow-lg max-w-lg w-full p-8">
           <div className="flex justify-center mb-5">
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 size={36} className="text-green-500" />
+              <CheckCircle2 size={36} className="text-green-600" />
             </div>
           </div>
-          <h1 className="text-2xl font-extrabold text-[#0D1F35] text-center mb-1">Order Confirmed</h1>
-          <p className="text-gray-400 text-sm text-center mb-1">
-            Order number: <span className="font-bold text-[#0D1F35]">{orderNumber}</span>
-          </p>
-          <p className="text-gray-500 text-sm text-center mb-6">
-            Thank you {firstName}. Your order has been placed successfully.
-          </p>
-
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5 mb-5 space-y-2">
-            <div className="flex items-center gap-2 mb-2">
-              <Mail size={18} className="text-yellow-600" />
-              <p className="font-bold text-[#0D1F35] text-sm">Payment Instructions Coming</p>
-            </div>
-            <p className="text-sm text-gray-600">
-              We will email your <strong>{selectedCrypto}</strong> wallet address and exact payment amount to{' '}
-              <strong>{email}</strong> within 1 hour.
-            </p>
-            <p className="text-sm text-gray-600">Your order will be processed and shipped once payment is confirmed.</p>
-            <p className="text-sm text-gray-600">Expected dispatch: <strong>1-2 business days after payment confirmed.</strong></p>
-            <p className="text-sm text-gray-500">Please check your spam folder if you do not receive our email within 1 hour.</p>
-            <p className="text-sm font-bold text-red-600">Do not send payment to any address not confirmed in our email.</p>
+          <h1 className="text-2xl font-bold text-center text-[#1A3A4A] mb-2">Order Confirmed!</h1>
+          <p className="text-center text-gray-600 mb-6">Thank you for your order, {firstName}.</p>
+          <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
+            <div className="flex justify-between text-sm"><span className="text-gray-600">Order Number:</span><span className="font-bold text-[#1A3A4A]">{orderNumber}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-600">Items:</span><span className="font-bold text-[#1A3A4A]">{confirmedItems.length}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-600">Total:</span><span className="font-bold text-[#1A3A4A]">${orderTotal.toFixed(2)}</span></div>
           </div>
-
-          <div className="border border-gray-100 rounded-xl p-4 mb-5 space-y-2">
-            {confirmedItems.map((item, i) => (
-              <div key={i} className="flex items-center gap-3 text-sm">
-                <img src={item.product.imageCompressed} alt={item.product.name} className="w-10 h-10 object-contain bg-gray-50 rounded" />
-                <div className="flex-1">
-                  <p className="font-medium text-[#0D1F35]">{item.product.name} <span className="text-gray-400">{item.selectedDose}</span></p>
-                  <p className="text-gray-400 text-xs">Qty: {item.quantity}</p>
-                </div>
-                <p className="font-semibold text-[#0D1F35]">${(item.price * item.quantity).toFixed(2)}</p>
-              </div>
-            ))}
-            <div className="border-t border-gray-100 pt-2 mt-2 space-y-1 text-sm">
-              <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-gray-500">
-                <span>Shipping ({selectedShipping.label})</span>
-                <span>{shippingCost === 0 ? <span className="text-green-600 font-bold">Free</span> : `$${shippingCost.toFixed(2)}`}</span>
-              </div>
-              <div className="flex justify-between text-gray-500"><span>Tax</span><span>${taxes.toFixed(2)}</span></div>
-              <div className="flex justify-between font-bold text-[#0D1F35] text-base pt-1"><span>Total</span><span>${orderTotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-gray-400 text-xs pt-1"><span>Payment method</span><span>{selectedCrypto}</span></div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Link href="/shop" className="flex-1">
-              <button className="w-full btn-navy py-3 rounded-xl font-bold text-sm">Continue Shopping</button>
-            </Link>
-            <a href="mailto:orders@noctapeptides.com" className="flex-1">
-              <button className="w-full py-3 rounded-xl font-semibold text-sm border border-gray-200 text-gray-600 hover:border-[#0D1F35] hover:text-[#0D1F35] transition-colors">
-                Questions? Email Us
-              </button>
-            </a>
-          </div>
+          <Link href="/">
+            <button className="w-full btn-navy py-3 rounded-lg font-bold text-sm">Continue Shopping</button>
+          </Link>
         </div>
       </div>
     );
   }
 
-  // ── Empty cart ──────────────────────────────────────────────────────────────
+  // ── Empty Cart ──────────────────────────────────────────────────────────────
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-gray-400 text-lg mb-4">Your cart is empty.</p>
+          <h1 className="text-3xl font-bold text-[#1A3A4A] mb-2">Your cart is empty</h1>
+          <p className="text-gray-600 mb-6">Add some research compounds to get started.</p>
           <Link href="/shop">
-            <button className="btn-navy px-5 py-2.5 rounded-md text-sm">Browse Products</button>
+            <button className="btn-navy px-6 py-3 rounded-lg font-bold">Browse Products</button>
           </Link>
         </div>
       </div>
     );
   }
 
-  // ── Checkout Layout ─────────────────────────────────────────────────────────
+  // ── Main Checkout ──────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top bar */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link href="/shop" className="flex items-center gap-1.5 text-gray-500 hover:text-[#0D1F35] transition-colors text-sm">
-            <ArrowLeft size={16} /> Back
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-[#1A3A4A]">Checkout</h1>
+          <Link href="/shop">
+            <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-[#1A3A4A] transition-colors">
+              <ArrowLeft size={16} /> Back to Shop
+            </button>
           </Link>
-          <span className="font-extrabold text-[#0D1F35] tracking-tight text-lg">NOCTA PEPTIDES</span>
-          <div className="flex items-center gap-1.5 text-green-600 text-xs font-semibold">
-            <Lock size={13} /> Secure Checkout
-          </div>
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
-        {/* Left — Steps */}
-        <div className="space-y-4">
-          {/* Step indicators */}
-          <div className="flex items-center gap-2 mb-6">
-            {[1,2,3].map(n => (
-              <div key={n} className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                  completedSteps.includes(n) ? 'bg-green-500 text-white'
-                  : step === n ? 'bg-[#0D1F35] text-white'
-                  : 'bg-gray-200 text-gray-400'
-                }`}>
-                  {completedSteps.includes(n) ? <CheckCircle2 size={14}/> : n}
+        {/* Order Summary Drawer */}
+        <div className="mb-6">
+          <button
+            onClick={() => setSummaryOpen(!summaryOpen)}
+            className="w-full flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#1A3A4A]">Order Summary</span>
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">{items.length} items</span>
+            </div>
+            <ChevronDown size={18} className={`text-gray-400 transition-transform ${summaryOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {summaryOpen && (
+            <div className="mt-2 bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+              {items.map(item => (
+                <div key={`${item.product.id}-${item.selectedDose}`} className="flex justify-between text-sm">
+                  <span className="text-gray-600">{item.product.name} {item.selectedDose} x{item.quantity}</span>
+                  <span className="font-bold text-[#1A3A4A]">${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
-                <span className={`text-xs font-medium hidden sm:block ${step === n ? 'text-[#0D1F35]' : 'text-gray-400'}`}>
-                  {n===1?'Shipping':n===2?'Delivery':'Payment'}
-                </span>
-                {n < 3 && <div className="w-8 h-px bg-gray-200 mx-1"/>}
+              ))}
+              <div className="border-t border-gray-200 pt-3 space-y-1">
+                <div className="flex justify-between text-sm"><span className="text-gray-600">Subtotal:</span><span className="font-bold">${subtotal.toFixed(2)}</span></div>
+                {appliedPromo && <div className="flex justify-between text-sm text-green-600"><span>Discount ({appliedPromo.code}):</span><span>-${discountAmount.toFixed(2)}</span></div>}
+                <div className="flex justify-between text-sm"><span className="text-gray-600">Shipping:</span><span className="font-bold">${shippingCost.toFixed(2)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-gray-600">Tax:</span><span className="font-bold">${taxes.toFixed(2)}</span></div>
+                <div className="flex justify-between text-base font-bold text-[#1A3A4A] pt-2 border-t"><span>Total:</span><span>${orderTotal.toFixed(2)}</span></div>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+        </div>
 
+        {/* Steps */}
+        <div className="space-y-4">
           {/* ── STEP 1 ── */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
               <div className="flex items-center gap-3">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${completedSteps.includes(1)?'bg-green-500 text-white':'bg-[#0D1F35] text-white'}`}>
-                  {completedSteps.includes(1)?<CheckCircle2 size={13}/>:'1'}
-                </div>
-                <span className="font-bold text-[#0D1F35]">Shipping Address</span>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step===1?'bg-[#0D1F35] text-white':'bg-gray-200 text-gray-400'}`}>1</div>
+                <span className={`font-bold ${step>=1?'text-[#1A3A4A]':'text-gray-400'}`}>Shipping Address</span>
               </div>
-              {completedSteps.includes(1) && step !== 1 && (
-                <button onClick={() => setStep(1)} className="text-xs text-[#0D1F35] underline font-medium">Edit</button>
-              )}
+              {completedSteps.includes(1) && <CheckCircle2 size={20} className="text-green-500" />}
             </div>
 
             {step === 1 && (
-              <div className="px-6 py-5 space-y-5">
-                {!accountDone && (
-                  <div className="border border-gray-100 rounded-xl p-5 space-y-4">
-                    <div className="flex flex-col items-center text-center gap-1 mb-2">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-1">
-                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-                      </div>
-                      <p className="font-bold text-[#0D1F35] text-base">Quick sign up to checkout</p>
-                      <p className="text-gray-400 text-sm">Just an email and password — takes 2 seconds</p>
-                    </div>
-                    <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0D1F35]"/>
-                    <input type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0D1F35]"/>
-                    <button onClick={() => { if (email) setAccountDone(true); }}
-                      className="w-full btn-navy py-3 rounded-xl font-bold text-sm">
-                      Continue to Checkout
-                    </button>
-                    <p className="text-center text-xs text-gray-400">Already have an account? <span className="text-[#0D1F35] underline cursor-pointer">Sign in</span></p>
+              <div className="px-6 py-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase">Email</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A4A]" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase">Full Name</label>
+                  <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="John Doe" className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A4A]" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase">Street Address</label>
+                  <input type="text" value={street} onChange={e => setStreet(e.target.value)} placeholder="123 Main St" className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A4A]" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase">Apt / Suite (Optional)</label>
+                  <input type="text" value={apt} onChange={e => setApt(e.target.value)} placeholder="Apt 4B" className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A4A]" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase">City</label>
+                    <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="New York" className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A4A]" />
                   </div>
-                )}
-
-                {accountDone && (
-                  <div className="space-y-4">
-                    <p className="font-semibold text-[#0D1F35] text-sm">Your Information</p>
-                    <input type="text" placeholder="Full name *" value={fullName} onChange={e => setFullName(e.target.value)}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0D1F35]"/>
-                    <div>
-                      <input type="email" value={email} readOnly
-                        className="w-full border border-gray-100 bg-gray-50 rounded-lg px-4 py-2.5 text-sm text-gray-500"/>
-                      <p className="text-xs text-gray-400 italic mt-1">We will send your order confirmation, tracking number, and shipping updates here.</p>
-                    </div>
-
-                    <p className="font-semibold text-[#0D1F35] text-sm pt-2">Delivery Address</p>
-                    <div className="relative">
-                      <input type="text" placeholder="Street address *" value={street} onChange={e => setStreet(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:border-[#0D1F35]"/>
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">📍</span>
-                    </div>
-                    <input type="text" placeholder="Apartment, suite, etc. (optional)" value={apt} onChange={e => setApt(e.target.value)}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0D1F35]"/>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input type="text" placeholder="City *" value={city} onChange={e => setCity(e.target.value)}
-                        className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0D1F35]"/>
-                      <select value={stateVal} onChange={e => setStateVal(e.target.value)}
-                        className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0D1F35] bg-white text-gray-700">
-                        <option value="">State *</option>
-                        {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input type="text" placeholder="ZIP code *" value={zip} onChange={e => setZip(e.target.value)}
-                        className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0D1F35]"/>
-                      <input type="tel" placeholder="Phone for delivery *" value={phone} onChange={e => setPhone(e.target.value)}
-                        className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0D1F35]"/>
-                    </div>
-
-                    <label className="flex items-start gap-3 cursor-pointer" onClick={() => setSmsConsent(!smsConsent)}>
-                      <div className={`w-5 h-5 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-colors ${smsConsent?'bg-green-500 border-green-500':'border-gray-300'}`}>
-                        {smsConsent && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-700">I would like to receive order and shipping text updates</p>
-                        <p className="text-xs text-gray-400 mt-1 leading-relaxed">By providing your phone number you agree to receive informational text messages from Nocta Peptides. Consent is not a condition of purchase. Message frequency will vary. Msg and data rates may apply. Reply HELP for help or STOP to cancel.</p>
-                      </div>
-                    </label>
-
-                    <label className="flex items-center gap-3 cursor-pointer" onClick={() => setBillingSame(!billingSame)}>
-                      <div className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${billingSame?'bg-blue-500 border-blue-500':'border-gray-300'}`}>
-                        {billingSame && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                      </div>
-                      <span className="text-sm text-gray-700">Billing address same as shipping address</span>
-                    </label>
-
-                    <button
-                      onClick={() => { if (fullName && street && city && stateVal && zip && phone) completeStep(1); }}
-                      className="w-full btn-navy py-3 rounded-xl font-bold text-sm mt-2">
-                      Continue to Delivery
-                    </button>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase">State</label>
+                    <select value={stateVal} onChange={e => setStateVal(e.target.value)} className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A4A]">
+                      <option value="">Select State</option>
+                      {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
-                )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase">ZIP Code</label>
+                  <input type="text" value={zip} onChange={e => setZip(e.target.value)} placeholder="10001" className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A4A]" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase">Phone</label>
+                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 123-4567" className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3A4A]" />
+                </div>
+
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" checked={smsConsent} onChange={e => setSmsConsent(e.target.checked)} className="w-4 h-4 rounded border-gray-300" />
+                  <span className="text-sm text-gray-600">I'd like to receive SMS updates about my order</span>
+                </label>
+
+                <button onClick={() => completeStep(1)} className="w-full btn-navy py-3 rounded-xl font-bold text-sm mt-2">Continue to Shipping</button>
               </div>
             )}
           </div>
@@ -465,19 +531,14 @@ export default function Checkout() {
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
               <div className="flex items-center gap-3">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${completedSteps.includes(2)?'bg-green-500 text-white':step===2?'bg-[#0D1F35] text-white':'bg-gray-200 text-gray-400'}`}>
-                  {completedSteps.includes(2)?<CheckCircle2 size={13}/>:'2'}
-                </div>
-                <span className={`font-bold ${step>=2?'text-[#0D1F35]':'text-gray-400'}`}>Delivery Method</span>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step===2?'bg-[#0D1F35] text-white':'bg-gray-200 text-gray-400'}`}>2</div>
+                <span className={`font-bold ${step>=2?'text-[#1A3A4A]':'text-gray-400'}`}>Shipping Method</span>
               </div>
-              {completedSteps.includes(2) && step !== 2 && (
-                <button onClick={() => setStep(2)} className="text-xs text-[#0D1F35] underline font-medium">Edit</button>
-              )}
+              {completedSteps.includes(2) && <CheckCircle2 size={20} className="text-green-500" />}
             </div>
 
             {step === 2 && (
-              <div className="px-6 py-5 space-y-3">
-                <p className="text-sm text-gray-500 mb-4">How would you like your order delivered?</p>
+              <div className="px-6 py-5 space-y-4">
                 {SHIPPING_OPTIONS.map(opt => {
                   const isFree = subtotal >= opt.freeAt;
                   const estDate = opt.id==='standard' ? deliveryDates.standard : opt.id==='twoday' ? deliveryDates.twoday : deliveryDates.overnight;
@@ -498,9 +559,7 @@ export default function Checkout() {
                   );
                 })}
 
-                <button onClick={() => completeStep(2)} className="w-full btn-navy py-3 rounded-xl font-bold text-sm mt-2">
-                  Continue to Payment
-                </button>
+                <button onClick={() => completeStep(2)} className="w-full btn-navy py-3 rounded-xl font-bold text-sm mt-2">Continue to Payment</button>
 
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3 mt-3">
                   <ShieldCheck size={18} className="text-green-600 flex-shrink-0 mt-0.5"/>
@@ -518,7 +577,7 @@ export default function Checkout() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
               <div className="flex items-center gap-3">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step===3?'bg-[#0D1F35] text-white':'bg-gray-200 text-gray-400'}`}>3</div>
-                <span className={`font-bold ${step>=3?'text-[#0D1F35]':'text-gray-400'}`}>Payment</span>
+                <span className={`font-bold ${step>=3?'text-[#1A3A4A]':'text-gray-400'}`}>Payment</span>
               </div>
             </div>
 
@@ -528,167 +587,116 @@ export default function Checkout() {
                   <Lock size={13}/> Secure checkout — 256-bit SSL
                 </div>
 
-                {/* Payment tabs */}
+                {/* Express checkout — Apple Pay / Google Pay — shows automatically if browser supports it */}
+                <ExpressCheckout
+                  orderTotal={orderTotal}
+                  orderNumber={genOrderNumber()}
+                  customerEmail={email}
+                  customerName={fullName}
+                  shippingAddress={`${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`}
+                  items={items.map(i => ({
+                    name: i.product.name,
+                    dosage: i.selectedDose,
+                    qty: i.quantity,
+                    price: (i.price * i.quantity).toFixed(2)
+                  }))}
+                  showDivider={true}
+                  onSuccess={(_payerEmail, _payerName) => {
+                    clearCart()
+                    window.location.href = `/order-confirmed?order=${genOrderNumber()}`
+                  }}
+                  onError={(msg) => setPlaceOrderError(msg)}
+                />
+
+                {/* Payment tabs — Crypto and Card only */}
                 <div className="flex gap-2">
                   {[
-                    { id:'crypto',  label:'Crypto',  icon:'₿' },
-                    { id:'card',    label:'Card / Express', icon:'💳' },
+                    { id: 'crypto', label: 'Crypto', icon: '₿' },
+                    { id: 'card', label: 'Card', icon: '💳' },
                   ].map(tab => (
-                    <button key={tab.id} onClick={() => setPaymentTab(tab.id as any)}
+                    <button
+                      key={tab.id}
+                      onClick={() => setPaymentTab(tab.id as any)}
                       className={`relative flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
-                        paymentTab===tab.id ? 'bg-[#0D1F35] text-white border-[#0D1F35]' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-                      }`}>
+                        paymentTab === tab.id
+                          ? 'bg-[#0D1F35] text-white border-[#0D1F35]'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
                       <span>{tab.icon}</span>
                       <span>{tab.label}</span>
                     </button>
                   ))}
                 </div>
 
-                {/* Crypto */}
+                {/* Crypto tab */}
                 {paymentTab === 'crypto' && (
                   <div className="space-y-3">
                     <div className="grid grid-cols-4 gap-2">
                       {CRYPTOS.map(c => (
-                        <button key={c.id} onClick={() => setSelectedCrypto(c.id)}
+                        <button
+                          key={c.id}
+                          onClick={() => setSelectedCrypto(c.id)}
                           className={`py-3 rounded-xl border-2 text-xs font-bold transition-all flex flex-col items-center gap-1 ${
-                            selectedCrypto===c.id ? 'bg-[#0D1F35] text-white border-[#0D1F35]' : 'border-gray-200 text-gray-600 hover:border-gray-400'
-                          }`}>
+                            selectedCrypto === c.id
+                              ? 'bg-[#0D1F35] text-white border-[#0D1F35]'
+                              : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                          }`}
+                        >
                           <span className="text-base">{c.icon}</span>
                           <span>{c.ticker}</span>
                         </button>
                       ))}
                     </div>
                     {selectedCrypto && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-1.5">
-                        <div className="flex items-center gap-2 mb-1">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                          <p className="text-sm font-semibold text-blue-800">Secure crypto payment</p>
-                        </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <p className="text-sm font-semibold text-blue-800 mb-1">Secure crypto payment</p>
                         <p className="text-xs text-blue-700">You will be redirected to our secure payment page to complete your crypto payment instantly.</p>
                       </div>
                     )}
+                    {placeOrderError && <p className="text-red-500 text-xs font-medium">{placeOrderError}</p>}
+                    <button
+                      onClick={handlePlaceOrder}
+                      disabled={isLoading}
+                      className="w-full btn-navy py-4 rounded-xl font-bold text-base disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                          </svg>
+                          {loadingMessage}
+                        </>
+                      ) : 'Place Order'}
+                    </button>
                   </div>
                 )}
 
-                {/* Card & Express — Stripe Elements (live) */}
+                {/* Card tab — inline Stripe card form wrapped in its own Elements provider */}
                 {paymentTab === 'card' && (
-                  <StripeCardForm
-                    orderTotal={orderTotal}
-                    orderNumber={genOrderNumber()}
-                    customerEmail={email}
-                    customerName={fullName}
-                    shippingAddress={`${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`}
-                    items={items.map(i => ({ name: i.product.name, dosage: i.selectedDose, qty: i.quantity, price: (i.price * i.quantity).toFixed(2) }))}
-                    onSuccess={() => {
-                      clearCart();
-                      window.location.href = `/order-confirmed?order=${orderNumber || genOrderNumber()}`;
-                    }}
-                  />
-                )}
-
-                {placeOrderError && <p className="text-red-500 text-xs font-medium">{placeOrderError}</p>}
-
-                {/* Only show Place Order button for crypto tab */}
-                {paymentTab === 'crypto' && (
-                  <button
-                    onClick={handlePlaceOrder}
-                    disabled={isLoading}
-                    className="w-full btn-navy py-4 rounded-xl font-bold text-base mt-2 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                        </svg>
-                        {loadingMessage}
-                      </>
-                    ) : 'Place Order'}
-                  </button>
+                  <Elements stripe={stripePromise}>
+                    <CheckoutCardForm
+                      orderTotal={orderTotal}
+                      orderNumber={genOrderNumber()}
+                      customerEmail={email}
+                      customerName={fullName}
+                      shippingAddress={`${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`}
+                      items={items.map(i => ({
+                        name: i.product.name,
+                        dosage: i.selectedDose,
+                        qty: i.quantity,
+                        price: (i.price * i.quantity).toFixed(2)
+                      }))}
+                      onSuccess={() => {
+                        clearCart()
+                        window.location.href = `/order-confirmed?order=${genOrderNumber()}`
+                      }}
+                    />
+                  </Elements>
                 )}
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Right — Order Summary */}
-        <div className="lg:sticky lg:top-24 h-fit">
-          <button className="lg:hidden w-full flex items-center justify-between bg-white rounded-2xl border border-gray-100 px-5 py-4 mb-2"
-            onClick={() => setSummaryOpen(!summaryOpen)}>
-            <span className="font-bold text-[#0D1F35] text-sm">Order Summary ({items.length} items)</span>
-            <ChevronDown size={16} className={`text-gray-400 transition-transform ${summaryOpen?'rotate-180':''}`}/>
-          </button>
-
-          <div className={`bg-white rounded-2xl border border-gray-100 overflow-hidden ${summaryOpen?'block':'hidden lg:block'}`}>
-            <div className="px-5 py-4 space-y-3">
-              {items.map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <img src={item.product.imageCompressed} alt={item.product.name} className="w-12 h-12 object-contain bg-gray-50 rounded-lg flex-shrink-0"/>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[#0D1F35] truncate">{item.product.name}</p>
-                    <p className="text-xs text-gray-400">{item.selectedDose} · Qty {item.quantity}</p>
-                  </div>
-                  <p className="text-sm font-bold text-[#0D1F35]">${(item.price * item.quantity).toFixed(2)}</p>
-                </div>
-              ))}
-
-              {/* Promo code */}
-              <div className="pt-2 space-y-1.5">
-                {appliedPromo ? (
-                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                    <div className="flex items-center gap-1.5">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      <span className="text-xs font-semibold text-green-700">{appliedPromo.code}</span>
-                      <span className="text-xs text-green-600">({appliedPromo.discount}% off)</span>
-                    </div>
-                    <button onClick={() => { removePromo(); setPromoInput(''); }} className="text-green-400 hover:text-green-600 ml-2">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="Promo code" value={promoInput}
-                      onChange={e => { setPromoInput(e.target.value.toUpperCase()); if (promoError) removePromo(); }}
-                      onKeyDown={e => e.key === 'Enter' && applyPromo(promoInput)}
-                      className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#0D1F35] uppercase"/>
-                    <button onClick={() => applyPromo(promoInput)} className="px-3 py-2 text-xs font-semibold border border-gray-200 rounded-lg text-gray-600 hover:border-[#0D1F35] hover:text-[#0D1F35] transition-colors">Apply</button>
-                  </div>
-                )}
-                {promoError && !appliedPromo && <p className="text-xs text-red-500 pl-1">{promoError}</p>}
-              </div>
-
-              <div className="border-t border-gray-100 pt-3 space-y-2 text-sm">
-                <div className="flex justify-between text-gray-500">
-                  <span>Subtotal</span>
-                  <span className={appliedPromo ? 'line-through text-gray-400' : ''}>${subtotal.toFixed(2)}</span>
-                </div>
-                {appliedPromo && (
-                  <>
-                    <div className="flex justify-between text-green-600 font-medium">
-                      <span>Discount ({appliedPromo.code})</span>
-                      <span>-${discountAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-700 font-semibold">
-                      <span>Discounted Subtotal</span>
-                      <span>${discountedSubtotal.toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
-                <div className="flex justify-between text-gray-500">
-                  <span>Shipping</span>
-                  <span>{shippingCost===0 ? <span className="text-green-600 font-bold">Free</span> : `$${shippingCost.toFixed(2)}`}</span>
-                </div>
-                <div className="flex justify-between text-gray-500"><span>Shipment Protection</span><span className="text-green-600 font-bold">Free</span></div>
-                <div className="flex justify-between text-gray-500"><span>Tax (8.875%)</span><span>${taxes.toFixed(2)}</span></div>
-                <div className="flex justify-between font-bold text-[#0D1F35] text-base pt-1 border-t border-gray-100">
-                  <span>Total</span><span>${orderTotal.toFixed(2)}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center gap-1.5 text-green-600 text-xs font-semibold pt-1">
-                <Lock size={12}/> Secure checkout
-              </div>
-            </div>
           </div>
         </div>
       </div>
