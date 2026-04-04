@@ -125,6 +125,7 @@ export default function CartDrawer() {
   };
 
   const handleProceedToCheckout = () => {
+    closeCart();
     setShowLegalPopup(true);
   };
 
