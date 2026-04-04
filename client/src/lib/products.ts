@@ -21,6 +21,8 @@ export interface Product {
   blendComponents?: string[];
   coaUrl?: string;
   tags?: string[];
+  rating?: number;
+  reviewCount?: number;
 }
 
 export const CATEGORIES = [
@@ -51,6 +53,8 @@ export const PRODUCTS: Product[] = [
     ],
     featured: true,
     tags: ['bestseller', 'weight-loss'],
+    rating: 4.8,
+    reviewCount: 52,
   },
   {
     id: 'bpc-157',
@@ -66,6 +70,8 @@ export const PRODUCTS: Product[] = [
     ],
     featured: true,
     tags: ['bestseller', 'recovery'],
+    rating: 4.9,
+    reviewCount: 48,
   },
   {
     id: 'tb-500',
@@ -81,6 +87,8 @@ export const PRODUCTS: Product[] = [
     ],
     featured: true,
     tags: ['recovery'],
+    rating: 4.7,
+    reviewCount: 34,
   },
   {
     id: 'ghk-cu',
@@ -96,6 +104,8 @@ export const PRODUCTS: Product[] = [
       { dose: '100mg', price: 59.99 },
     ],
     tags: ['anti-aging'],
+    rating: 4.8,
+    reviewCount: 29,
   },
   {
     id: 'cjc1295-ipamorelin',
@@ -110,6 +120,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 62.99 },
     ],
     tags: ['anti-aging', 'recovery'],
+    rating: 4.6,
+    reviewCount: 21,
   },
   {
     id: 'tesamorlin',
@@ -124,6 +136,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 72.99 },
     ],
     tags: ['weight-loss'],
+    rating: 4.7,
+    reviewCount: 18,
   },
   {
     id: 'aod-9604',
@@ -138,6 +152,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 49.99 },
     ],
     tags: ['weight-loss'],
+    rating: 4.5,
+    reviewCount: 14,
   },
   {
     id: 'mots-c',
@@ -152,6 +168,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 42.99 },
     ],
     tags: ['anti-aging'],
+    rating: 4.8,
+    reviewCount: 11,
   },
   {
     id: 'nad-plus',
@@ -167,6 +185,8 @@ export const PRODUCTS: Product[] = [
     ],
     featured: true,
     tags: ['anti-aging', 'bestseller'],
+    rating: 4.7,
+    reviewCount: 31,
   },
   {
     id: 'kpv',
@@ -181,6 +201,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 42.99 },
     ],
     tags: ['recovery'],
+    rating: 4.5,
+    reviewCount: 9,
   },
   {
     id: 'glutathione',
@@ -195,6 +217,8 @@ export const PRODUCTS: Product[] = [
       { dose: '500mg', price: 62.99 },
     ],
     tags: ['anti-aging'],
+    rating: 4.6,
+    reviewCount: 23,
   },
   {
     id: 'cagrilintide',
@@ -209,6 +233,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 72.99 },
     ],
     tags: ['weight-loss'],
+    rating: 4.8,
+    reviewCount: 38,
   },
   {
     id: 'ipamorelin',
@@ -223,6 +249,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 52.99 },
     ],
     tags: ['anti-aging'],
+    rating: 4.6,
+    reviewCount: 14,
   },
   {
     id: 'igf1-lr3',
@@ -237,6 +265,8 @@ export const PRODUCTS: Product[] = [
       { dose: '1mg', price: 72.99 },
     ],
     tags: ['recovery'],
+    rating: 4.7,
+    reviewCount: 26,
   },
   {
     id: 'epithalon',
@@ -251,6 +281,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 32.99 },
     ],
     tags: ['anti-aging'],
+    rating: 4.9,
+    reviewCount: 27,
   },
   {
     id: '5-amino-1mq',
@@ -265,6 +297,8 @@ export const PRODUCTS: Product[] = [
       { dose: '100mg', price: 52.99 },
     ],
     tags: ['weight-loss'],
+    rating: 4.8,
+    reviewCount: 6,
   },
   {
     id: 'thymosin-alpha1',
@@ -279,6 +313,8 @@ export const PRODUCTS: Product[] = [
       { dose: '5mg', price: 42.99 },
     ],
     tags: ['recovery'],
+    rating: 4.7,
+    reviewCount: 17,
   },
   {
     id: 'semax',
@@ -294,6 +330,8 @@ export const PRODUCTS: Product[] = [
     ],
     featured: true,
     tags: ['cognitive'],
+    rating: 4.7,
+    reviewCount: 13,
   },
   {
     id: 'selank',
@@ -308,6 +346,8 @@ export const PRODUCTS: Product[] = [
       { dose: '30mg', price: 32.99 },
     ],
     tags: ['cognitive'],
+    rating: 4.8,
+    reviewCount: 16,
   },
   {
     id: 'dsip',
@@ -322,6 +362,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 32.99 },
     ],
     tags: ['cognitive'],
+    rating: 4.5,
+    reviewCount: 9,
   },
   {
     id: 'melanotan-ii',
@@ -336,6 +378,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 32.99 },
     ],
     tags: ['sexual-health'],
+    rating: 4.7,
+    reviewCount: 26,
   },
   {
     id: 'melanotan-i',
@@ -350,6 +394,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 32.99 },
     ],
     tags: ['sexual-health'],
+    rating: 4.6,
+    reviewCount: 8,
   },
   {
     id: 'pt-141',
@@ -364,6 +410,8 @@ export const PRODUCTS: Product[] = [
       { dose: '10mg', price: 32.99 },
     ],
     tags: ['sexual-health'],
+    rating: 4.8,
+    reviewCount: 38,
   },
   {
     id: 'snap-8',
@@ -378,6 +426,8 @@ export const PRODUCTS: Product[] = [
       { dose: '50mg', price: 32.99 },
     ],
     tags: ['anti-aging'],
+    rating: 4.6,
+    reviewCount: 22,
   },
   {
     id: 'bac-water',
@@ -392,6 +442,8 @@ export const PRODUCTS: Product[] = [
       { dose: '30ml', price: 11.99 },
     ],
     tags: ['accessories'],
+    rating: 4.5,
+    reviewCount: 10,
   },
   {
     id: 'wolverine-blend',
@@ -410,6 +462,8 @@ export const PRODUCTS: Product[] = [
     blendComponents: ['BPC-157 10mg', 'TB-500 10mg'],
     featured: true,
     tags: ['blends', 'recovery', 'bestseller'],
+    rating: 4.8,
+    reviewCount: 19,
   },
   {
     id: 'glow-blend',
@@ -426,6 +480,8 @@ export const PRODUCTS: Product[] = [
     isBlend: true,
     blendComponents: ['BPC-157 10mg', 'GHK-Cu 50mg', 'TB-500 10mg'],
     tags: ['blends', 'anti-aging'],
+    rating: 4.6,
+    reviewCount: 11,
   },
   {
     id: 'klow-blend',
@@ -442,6 +498,8 @@ export const PRODUCTS: Product[] = [
     isBlend: true,
     blendComponents: ['BPC-157 10mg', 'TB-500 10mg', 'GHK-Cu 50mg', 'KPV 10mg'],
     tags: ['blends', 'weight-loss'],
+    rating: 4.7,
+    reviewCount: 8,
   },
 ];
 

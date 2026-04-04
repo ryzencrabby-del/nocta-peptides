@@ -58,9 +58,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Stars */}
           <div className="flex items-center gap-1 mb-3">
             {[1,2,3,4,5].map(i => (
-              <Star key={i} size={10} className="star-gold fill-current" />
+              <Star key={i} size={10} className={`${i <= Math.round(product.rating || 5) ? 'star-gold fill-current' : 'text-gray-200'}`} />
             ))}
-            <span className="text-gray-400 text-[10px] ml-1">(5.0)</span>
+            <span className="text-gray-400 text-[10px] ml-1">({product.rating || 5.0})</span>
           </div>
 
           {/* Dosage selector */}

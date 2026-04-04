@@ -75,8 +75,10 @@ export default function ProductDetail() {
 
             {/* Stars */}
             <div className="flex items-center gap-1.5 mb-4">
-              {[1,2,3,4,5].map(i => <Star key={i} size={14} className="star-gold fill-current" />)}
-              <span className="text-gray-400 text-sm ml-1">5.0 · 48 reviews</span>
+              {[1,2,3,4,5].map(i => (
+                <Star key={i} size={14} className={`${i <= Math.round(product.rating || 5) ? 'star-gold fill-current' : 'text-gray-200'}`} />
+              ))}
+              <span className="text-gray-400 text-sm ml-1">{product.rating || 5.0} · {product.reviewCount || 48} reviews</span>
             </div>
 
             {/* Purity badge */}
