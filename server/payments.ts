@@ -242,6 +242,10 @@ export function registerPaymentRoutes(app: Express) {
           order_id: orderNumber,
           customer_name: customerName || "",
         },
+        shipping: shippingAddress ? {
+          name: customerName || "Customer",
+          address: { line1: shippingAddress },
+        } : undefined,
         automatic_payment_methods: {
           enabled: true,
           allow_redirects: "always",
@@ -304,9 +308,26 @@ export function registerPaymentRoutes(app: Express) {
         const pi = event.data.object as Stripe.PaymentIntent;
         const orderId = pi.metadata?.order_id;
         const orderDetails = orderId ? orderStore[orderId] : undefined;
-        const customerName = orderDetails?.customerName || pi.metadata?.customer_name || "Customer";
+        const customerName = orderDetails?.customerName || pi.shipping?.name || pi.metadata?.customer_name || "Customer";
         const customerEmail = orderDetails?.customerEmail || pi.receipt_email || undefined;
         const amountPaid = (pi.amount_received / 100).toFixed(2);
+        
+        // Extract shipping address from Stripe if not in our store (Express Checkout case)
+        let shippingAddress = orderDetails?.shippingAddress;
+        if (!shippingAddress && pi.shipping?.address) {
+          const addr = pi.shipping.address;
+          shippingAddress = [
+            addr.line1,
+            addr.line2,
+            addr.city,
+            addr.state,
+            addr.postal_code,
+            addr.country
+          ].filter(Boolean).join(', ');
+        }
+        
+        // Extract items from store
+        const itemsList = orderDetails?.items?.map(i => `${i.name} ${i.dosage} x${i.qty} — $${i.price}`).join('\n') || "Items in original cart";
 
         console.log(`[Stripe Webhook] payment_intent.succeeded for order ${orderId}`);
 
@@ -322,7 +343,7 @@ export function registerPaymentRoutes(app: Express) {
               amount_paid: amountPaid,
               customer_name: customerName,
               customer_email: customerEmail || "unknown",
-              message: `Card payment confirmed via Stripe. SHIP THIS ORDER NOW.\n\nOrder: ${orderId}\nAmount: $${amountPaid} USD\nCustomer: ${customerName} (${customerEmail || "unknown"})\nStripe PaymentIntent: ${pi.id}`,
+              message: `Card payment confirmed via Stripe. SHIP THIS ORDER NOW.\n\nOrder: ${orderId}\nAmount: $${amountPaid} USD\nCustomer: ${customerName} (${customerEmail || "unknown"})\nShipping: ${shippingAddress || "Address in Stripe Dashboard"}\n\nItems:\n${itemsList}\n\nStripe PaymentIntent: ${pi.id}`,
             }),
           }),
         ];

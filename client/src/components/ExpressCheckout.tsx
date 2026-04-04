@@ -138,7 +138,19 @@ export default function ExpressCheckout(props: ExpressCheckoutProps) {
             borderRadius: '10px',
           },
         },
-        paymentMethodCreation: 'manual', // Important for Link stability
+        // Request shipping address collection for Express Checkout
+        paymentMethodCreation: 'manual',
+        externalPaymentMethodSettings: {
+          applePay: {
+            shippingContactFields: ['name', 'address', 'email', 'phone'],
+          },
+          googlePay: {
+            shippingAddressRequired: true,
+            shippingAddressParameters: {
+              phoneNumberRequired: true,
+            },
+          },
+        },
       }}
     >
       <InnerExpressCheckout {...props} />
