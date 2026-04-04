@@ -528,12 +528,11 @@ export default function Checkout() {
                   <Lock size={13}/> Secure checkout — 256-bit SSL
                 </div>
 
-                {/* Payment tabs — Express SOON badge removed */}
+                {/* Payment tabs */}
                 <div className="flex gap-2">
                   {[
-                    { id:'crypto',  label:'Crypto',  icon:'₿',  soon:false },
-                    { id:'card',    label:'Card',    icon:'💳', soon:false },
-                    { id:'express', label:'Express', icon:'⚡', soon:false },
+                    { id:'crypto',  label:'Crypto',  icon:'₿' },
+                    { id:'card',    label:'Card / Express', icon:'💳' },
                   ].map(tab => (
                     <button key={tab.id} onClick={() => setPaymentTab(tab.id as any)}
                       className={`relative flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
@@ -571,7 +570,7 @@ export default function Checkout() {
                   </div>
                 )}
 
-                {/* Card — Stripe Elements (live) */}
+                {/* Card & Express — Stripe Elements (live) */}
                 {paymentTab === 'card' && (
                   <StripeCardForm
                     orderTotal={orderTotal}
@@ -585,34 +584,6 @@ export default function Checkout() {
                       window.location.href = `/order-confirmed?order=${orderNumber || genOrderNumber()}`;
                     }}
                   />
-                )}
-
-                {/* Express — Apple Pay / Google Pay via Stripe */}
-                {paymentTab === 'express' && (
-                  <div className="space-y-3">
-                    <ExpressCheckout
-                      orderTotal={orderTotal}
-                      orderNumber={genOrderNumber()}
-                      customerEmail={email}
-                      customerName={fullName}
-                      shippingAddress={`${street}${apt ? ', ' + apt : ''}, ${city}, ${stateVal} ${zip}`}
-                      items={items.map(i => ({
-                        name: i.product.name,
-                        dosage: i.selectedDose,
-                        qty: i.quantity,
-                        price: (i.price * i.quantity).toFixed(2)
-                      }))}
-                      showDivider={false}
-                      onSuccess={(_payerEmail, _payerName) => {
-                        clearCart();
-                        window.location.href = `/order-confirmed?order=${orderNumber || genOrderNumber()}`;
-                      }}
-                      onError={(msg) => setPlaceOrderError(msg)}
-                    />
-                    <p className="text-center text-xs text-gray-400 mt-2">
-                      Apple Pay available on Safari · Google Pay available on Chrome
-                    </p>
-                  </div>
                 )}
 
                 {placeOrderError && <p className="text-red-500 text-xs font-medium">{placeOrderError}</p>}

@@ -229,15 +229,19 @@ export function registerPaymentRoutes(app: Express) {
       }
 
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(orderTotal * 100), // cents
+        amount: Math.round(Number(orderTotal) * 100), // cents
         currency: "usd",
-        receipt_email: customerEmail,
+        receipt_email: customerEmail || undefined,
         metadata: {
           order_id: orderNumber,
           customer_name: customerName || "",
         },
+        automatic_payment_methods: {
+          enabled: true,
+        },
       });
 
+      console.log(`[Stripe] Created intent ${paymentIntent.id} for order ${orderNumber}`);
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
       console.error("[Stripe] create-payment-intent error:", error);

@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import {
   Elements,
   PaymentElement,
+  ExpressCheckoutElement,
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { loadStripe, StripePaymentElementOptions } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { Loader2, CreditCard, AlertCircle } from 'lucide-react';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
@@ -25,8 +26,6 @@ function InnerCardForm({
   orderNumber,
   customerEmail,
   customerName,
-  shippingAddress,
-  items,
   onSuccess,
 }: StripeCardFormProps) {
   const stripe = useStripe();
@@ -35,8 +34,8 @@ function InnerCardForm({
   const [errorMessage, setErrorMessage] = useState('');
   const [isReady, setIsReady] = useState(false);
 
-  const handleStripePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleStripePayment = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!stripe || !elements) return;
 
     setIsLoading(true);
@@ -47,12 +46,6 @@ function InnerCardForm({
       confirmParams: {
         return_url: `${window.location.origin}/order-confirmed?order=${orderNumber}`,
         receipt_email: customerEmail,
-        payment_method_data: {
-          billing_details: {
-            name: customerName,
-            email: customerEmail,
-          },
-        },
       },
     });
 
@@ -60,60 +53,71 @@ function InnerCardForm({
       setErrorMessage(error.message || 'An unexpected error occurred.');
       setIsLoading(false);
     } else {
-      // confirmPayment usually redirects, but if it doesn't:
       onSuccess();
     }
   };
 
-  const paymentElementOptions: StripePaymentElementOptions = {
-    layout: 'tabs',
-    business: { name: 'Nocta Peptides' },
-  };
-
   return (
-    <form onSubmit={handleStripePayment} className="space-y-4">
-      <div className="min-h-[300px] relative">
-        {!isReady && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-            <Loader2 className="w-8 h-8 animate-spin text-[#1A3A4A]" />
-          </div>
-        )}
-        <PaymentElement 
-          options={paymentElementOptions} 
-          onReady={() => setIsReady(true)}
-        />
+    <div className="space-y-6">
+      {/* Express Checkout Element (Apple/Google Pay) */}
+      <div className="mb-8">
+        <ExpressCheckoutElement onConfirm={handleStripePayment} />
       </div>
 
-      {errorMessage && (
-        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-red-700">{errorMessage}</p>
+      <div className="relative flex items-center py-4">
+        <div className="flex-grow border-t border-gray-200"></div>
+        <span className="flex-shrink mx-4 text-gray-400 text-xs uppercase tracking-widest font-medium">Or pay with card</span>
+        <div className="flex-grow border-t border-gray-200"></div>
+      </div>
+
+      <form onSubmit={handleStripePayment} className="space-y-4">
+        <div className="min-h-[200px] relative">
+          {!isReady && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
+              <Loader2 className="w-8 h-8 animate-spin text-[#1A3A4A]" />
+            </div>
+          )}
+          <PaymentElement 
+            options={{ layout: 'tabs' }} 
+            onReady={() => setIsReady(true)}
+          />
         </div>
-      )}
 
-      <button
-        type="submit"
-        disabled={isLoading || !stripe || !elements || !isReady}
-        className="w-full bg-[#1A3A4A] text-white py-3.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#0D2535] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {isLoading ? (
-          <><Loader2 size={16} className="animate-spin" />Processing...</>
-        ) : (
-          <><CreditCard size={16} />Pay Now — ${orderTotal.toFixed(2)}</>
+        {errorMessage && (
+          <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <AlertCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-700">{errorMessage}</p>
+          </div>
         )}
-      </button>
 
-      <p className="text-center text-xs text-gray-400">
-        🔒 Secured by Stripe. Your payment details are never stored on our servers.
-      </p>
-    </form>
+        <button
+          type="submit"
+          disabled={isLoading || !stripe || !elements || !isReady}
+          className="w-full bg-[#1A3A4A] text-white py-4 rounded-lg font-bold text-base flex items-center justify-center gap-2 hover:bg-[#0D2535] transition-all shadow-md active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isLoading ? (
+            <><Loader2 size={18} className="animate-spin" />Processing...</>
+          ) : (
+            <><CreditCard size={18} />Pay Now — ${orderTotal.toFixed(2)}</>
+          )}
+        </button>
+
+        <p className="text-center text-[10px] text-gray-400 uppercase tracking-wider font-semibold pt-2">
+          🔒 Secure Encrypted Payment via Stripe
+        </p>
+      </form>
+    </div>
   );
 }
 
 export default function StripeCardForm(props: StripeCardFormProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setClientSecret(null);
+    setError(null);
+    
     fetch('/api/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -126,27 +130,45 @@ export default function StripeCardForm(props: StripeCardFormProps) {
         items: props.items,
       }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to create payment intent');
-        return res.json();
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.details || data.error || 'Failed to initialize payment');
+        return data;
       })
       .then((data) => {
         if (data.clientSecret) {
           setClientSecret(data.clientSecret);
         } else {
-          console.error('No client secret returned:', data);
+          throw new Error('No client secret received from server');
         }
       })
       .catch(err => {
-        console.error('Payment intent error:', err);
+        console.error('Stripe initialization error:', err);
+        setError(err.message);
       });
   }, [props.orderTotal, props.orderNumber]);
 
+  if (error) {
+    return (
+      <div className="p-6 bg-red-50 border border-red-100 rounded-xl text-center space-y-3">
+        <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
+        <h3 className="font-bold text-red-900">Checkout Initialization Failed</h3>
+        <p className="text-sm text-red-700">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="text-xs font-bold text-red-600 underline uppercase tracking-widest"
+        >
+          Try Refreshing the Page
+        </button>
+      </div>
+    );
+  }
+
   if (!clientSecret) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-[#1A3A4A]" />
-        <p className="text-sm text-gray-500 font-medium">Initializing secure checkout...</p>
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <Loader2 className="w-10 h-10 animate-spin text-[#1A3A4A]" />
+        <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Securing your session...</p>
       </div>
     );
   }
@@ -164,8 +186,8 @@ export default function StripeCardForm(props: StripeCardFormProps) {
             colorText: '#1A3A4A',
             colorDanger: '#ef4444',
             fontFamily: 'Inter, system-ui, sans-serif',
-            spacingUnit: '4px',
-            borderRadius: '8px',
+            spacingUnit: '5px',
+            borderRadius: '10px',
           },
         }
       }}
