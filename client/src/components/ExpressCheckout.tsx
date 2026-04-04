@@ -5,6 +5,7 @@ import {
   useStripe,
 } from '@stripe/react-stripe-js';
 import { loadStripe, PaymentRequest } from '@stripe/stripe-js';
+import { Loader2, AlertCircle, Apple, Smartphone } from 'lucide-react';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
 
@@ -33,6 +34,7 @@ function InnerExpressCheckout({
 }: ExpressCheckoutProps) {
   const stripe = useStripe();
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
+  const [canMakePayment, setCanMakePayment] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!stripe) return;
@@ -51,6 +53,9 @@ function InnerExpressCheckout({
     pr.canMakePayment().then((result) => {
       if (result) {
         setPaymentRequest(pr);
+        setCanMakePayment(true);
+      } else {
+        setCanMakePayment(false);
       }
     });
 
@@ -126,13 +131,37 @@ function InnerExpressCheckout({
     });
   }, [stripe, orderTotal, orderNumber]);
 
-  if (!paymentRequest) return null;
+  if (canMakePayment === null) {
+    return (
+      <div className="flex items-center justify-center py-6">
+        <Loader2 className="w-6 h-6 animate-spin text-[#1A3A4A]" />
+      </div>
+    );
+  }
+
+  if (canMakePayment === false) {
+    return (
+      <div className="p-6 bg-gray-50 border border-gray-100 rounded-xl text-center space-y-3">
+        <div className="flex justify-center gap-4 text-gray-300">
+          <Apple size={32} />
+          <Smartphone size={32} />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-bold text-[#1A3A4A]">Express Checkout Unavailable</p>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Apple Pay is available on Safari. Google Pay is available on Chrome. 
+            Please ensure you have a card set up in your browser or use the Card tab instead.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <PaymentRequestButtonElement
         options={{
-          paymentRequest,
+          paymentRequest: paymentRequest!,
           style: {
             paymentRequestButton: {
               type: 'buy',
