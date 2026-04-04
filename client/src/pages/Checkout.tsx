@@ -10,7 +10,7 @@ import { Link } from 'wouter';
 import { ArrowLeft, Lock, CheckCircle2, ChevronDown, ShieldCheck, Mail } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import StripeCardForm from '@/components/StripeCardForm';
-import ExpressCheckout, { InnerExpressCheckout } from '@/components/ExpressCheckout';
+import ExpressCheckout from '@/components/ExpressCheckout';
 
 const TAX_RATE = 0.08875;
 
@@ -582,8 +582,7 @@ export default function Checkout() {
                     items={items.map(i => ({ name: i.product.name, dosage: i.selectedDose, qty: i.quantity, price: (i.price * i.quantity).toFixed(2) }))}
                     onSuccess={() => {
                       clearCart();
-                      const num = genOrderNumber();
-                      window.location.href = `/order-confirmed?order=${num}`;
+                      window.location.href = `/order-confirmed?order=${orderNumber || genOrderNumber()}`;
                     }}
                   />
                 )}
@@ -606,8 +605,7 @@ export default function Checkout() {
                       showDivider={false}
                       onSuccess={(_payerEmail, _payerName) => {
                         clearCart();
-                        const num = genOrderNumber();
-                        window.location.href = `/order-confirmed?order=${num}`;
+                        window.location.href = `/order-confirmed?order=${orderNumber || genOrderNumber()}`;
                       }}
                       onError={(msg) => setPlaceOrderError(msg)}
                     />

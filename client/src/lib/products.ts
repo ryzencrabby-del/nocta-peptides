@@ -435,7 +435,7 @@ export const PRODUCTS: Product[] = [
     imageCompressed: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/klow-blend-v2-80mg.webp',
     purity: '99%+',
     shortDesc: 'KPV + low-dose GLP-3 RT for gut health and metabolic research.',
-    description: 'The KLOW Blend combines KPV and low-dose GLP-3 RT for comprehensive gut health and metabolic research.',
+    description: 'The KLOW Blend combines KPV and low-dose GLP-3 RT for comprehensive gut health and metabolic research. KPV provides powerful anti-inflammatory support while GLP-3 RT regulates appetite and metabolic function.',
     variants: [
       { dose: '80mg', price: 144.99 },
     ],

@@ -36,6 +36,7 @@ function InnerExpressCheckout({
 
   useEffect(() => {
     if (!stripe) return;
+
     const pr = stripe.paymentRequest({
       country: 'US',
       currency: 'usd',
@@ -46,27 +47,61 @@ function InnerExpressCheckout({
       requestPayerName: true,
       requestPayerEmail: true,
     });
-    pr.canMakePayment().then(result => {
-      if (result) setPaymentRequest(pr);
+
+    pr.canMakePayment().then((result) => {
+      if (result) {
+        setPaymentRequest(pr);
+      }
     });
+
     pr.on('paymentmethod', async (ev) => {
       const resolvedEmail = customerEmail || ev.payerEmail || '';
       const resolvedName = customerName || ev.payerName || '';
+
       try {
         const response = await fetch('/api/create-payment-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderTotal, orderNumber, customerEmail: resolvedEmail, customerName: resolvedName, shippingAddress: shippingAddress || '', items: items || [] }),
+          body: JSON.stringify({
+            orderTotal,
+            orderNumber,
+            customerEmail: resolvedEmail,
+            customerName: resolvedName,
+            shippingAddress: shippingAddress || '',
+            items: items || []
+          }),
         });
+
         const { clientSecret, error: serverError } = await response.json() as { clientSecret?: string; error?: string };
-        if (serverError || !clientSecret) { ev.complete('fail'); onError?.(serverError || 'Payment setup failed.'); return; }
-        const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, { payment_method: ev.paymentMethod.id }, { handleActions: false });
-        if (error) { ev.complete('fail'); onError?.(error.message || 'Payment failed.'); return; }
+
+        if (serverError || !clientSecret) {
+          ev.complete('fail');
+          onError?.(serverError || 'Payment setup failed.');
+          return;
+        }
+
+        const { error, paymentIntent } = await stripe.confirmCardPayment(
+          clientSecret,
+          { payment_method: ev.paymentMethod.id },
+          { handleActions: false }
+        );
+
+        if (error) {
+          ev.complete('fail');
+          onError?.(error.message || 'Payment failed.');
+          return;
+        }
+
         ev.complete('success');
+
         if (paymentIntent.status === 'requires_action') {
           const { error: actionError } = await stripe.confirmCardPayment(clientSecret);
-          if (actionError) { onError?.(actionError.message || 'Authentication failed.'); return; }
+          if (actionError) {
+            onError?.(actionError.message || 'Authentication failed.');
+            return;
+          }
         }
+
         try {
           await fetch('https://formspree.io/f/mzdkdzbw', {
             method: 'POST',
@@ -79,9 +114,15 @@ function InnerExpressCheckout({
               message: `Express checkout confirmed.\n\nOrder: ${orderNumber}\nAmount: $${orderTotal.toFixed(2)}\nCustomer: ${resolvedName} (${resolvedEmail})\n\nSHIP THIS ORDER NOW.`,
             }),
           });
-        } catch (e) { console.error('[Formspree] failed:', e); }
+        } catch (e) {
+          console.error('[Formspree] failed:', e);
+        }
+
         onSuccess(resolvedEmail, resolvedName);
-      } catch { ev.complete('fail'); onError?.('Payment failed. Please try again.'); }
+      } catch (err) {
+        ev.complete('fail');
+        onError?.('Payment failed. Please try again.');
+      }
     });
   }, [stripe, orderTotal, orderNumber]);
 
@@ -92,7 +133,13 @@ function InnerExpressCheckout({
       <PaymentRequestButtonElement
         options={{
           paymentRequest,
-          style: { paymentRequestButton: { type: 'buy', theme: 'dark', height: '48px' } },
+          style: {
+            paymentRequestButton: {
+              type: 'buy',
+              theme: 'dark',
+              height: '48px',
+            },
+          },
         }}
       />
       {showDivider && (
