@@ -1,13 +1,18 @@
 // NOCTA PEPTIDES — Footer
-// White background, 4-column grid: brand, shop, company, contact
-// Dark navy links, legal disclaimer at bottom
+// Deep dark background, blue accent links, same structure
 
 import { Link } from 'wouter';
 import { Mail } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#0D1F35] border-t border-white/10 mt-20">
+    <footer
+      className="mt-20"
+      style={{
+        background: '#030609',
+        borderTop: '1px solid rgba(0, 184, 255, 0.08)',
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
@@ -19,15 +24,19 @@ export default function Footer() {
                 className="h-10 w-auto object-contain"
               />
             </div>
-            <p className="text-white/50 text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed mb-3" style={{ color: 'rgba(223, 240, 255, 0.4)' }}>
               Premium research-grade peptides. Third-party tested to 99%+ purity. Trusted by researchers worldwide.
             </p>
-            <p className="text-white/30 text-xs leading-relaxed mt-3">
+            <p className="text-xs leading-relaxed" style={{ color: 'rgba(223, 240, 255, 0.22)' }}>
               Nocta Peptides is the official rebrand of HomoPeptide. Same verified compounds. Same Janoshik-tested batches.
             </p>
-            <div className="mt-4 flex items-center gap-2 text-sm text-white/50">
-              <Mail size={14} />
-              <a href="mailto:support@noctapeptides.com" className="hover:text-white transition-colors">
+            <div className="mt-4 flex items-center gap-2 text-sm" style={{ color: 'rgba(223, 240, 255, 0.4)' }}>
+              <Mail size={14} style={{ color: 'rgba(0, 184, 255, 0.6)' }} />
+              <a
+                href="mailto:support@noctapeptides.com"
+                className="hover:text-white transition-colors duration-200"
+                style={{ color: 'inherit' }}
+              >
                 support@noctapeptides.com
               </a>
             </div>
@@ -35,7 +44,12 @@ export default function Footer() {
 
           {/* Shop */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Shop</h4>
+            <h4
+              className="text-xs font-semibold uppercase tracking-widest mb-4"
+              style={{ color: 'rgba(0, 184, 255, 0.5)', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Shop
+            </h4>
             <ul className="space-y-2.5">
               {[
                 { href: '/shop', label: 'All Products' },
@@ -46,7 +60,11 @@ export default function Footer() {
                 { href: '/shop?category=blends', label: 'Blends & Stacks' },
               ].map(link => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-white/50 hover:text-white transition-colors">
+                  <Link
+                    href={link.href}
+                    className="text-sm transition-colors duration-200 hover:text-white"
+                    style={{ color: 'rgba(223, 240, 255, 0.4)' }}
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -56,7 +74,12 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Company</h4>
+            <h4
+              className="text-xs font-semibold uppercase tracking-widest mb-4"
+              style={{ color: 'rgba(0, 184, 255, 0.5)', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Company
+            </h4>
             <ul className="space-y-2.5">
               {[
                 { href: '/about', label: 'About Us' },
@@ -66,7 +89,11 @@ export default function Footer() {
                 { href: '/contact', label: 'Contact Us' },
               ].map(link => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-white/50 hover:text-white transition-colors">
+                  <Link
+                    href={link.href}
+                    className="text-sm transition-colors duration-200 hover:text-white"
+                    style={{ color: 'rgba(223, 240, 255, 0.4)' }}
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -76,7 +103,12 @@ export default function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Legal</h4>
+            <h4
+              className="text-xs font-semibold uppercase tracking-widest mb-4"
+              style={{ color: 'rgba(0, 184, 255, 0.5)', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Legal
+            </h4>
             <ul className="space-y-2.5">
               {[
                 { href: '/terms', label: 'Terms of Service' },
@@ -85,7 +117,11 @@ export default function Footer() {
                 { href: '/shipping', label: 'Shipping Policy' },
               ].map(link => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-white/50 hover:text-white transition-colors">
+                  <Link
+                    href={link.href}
+                    className="text-sm transition-colors duration-200 hover:text-white"
+                    style={{ color: 'rgba(223, 240, 255, 0.4)' }}
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -95,16 +131,19 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/30">
+        <div
+          className="mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ borderTop: '1px solid rgba(0, 184, 255, 0.07)' }}
+        >
+          <p className="text-xs" style={{ color: 'rgba(223, 240, 255, 0.22)' }}>
             © 2026 Nocta Peptides. All rights reserved.
           </p>
-          <p className="text-xs text-white/30 text-center sm:text-right max-w-md">
+          <p className="text-xs text-center sm:text-right max-w-md" style={{ color: 'rgba(223, 240, 255, 0.22)' }}>
             All products are for research purposes only. Not for human consumption.
             By using this site you agree to our{' '}
-            <Link href="/terms" className="underline hover:text-white/60">Terms of Service</Link>{' '}
+            <Link href="/terms" className="underline hover:text-white/60 transition-colors">Terms of Service</Link>{' '}
             and{' '}
-            <Link href="/disclaimer" className="underline hover:text-white/60">Research Disclaimer</Link>.
+            <Link href="/disclaimer" className="underline hover:text-white/60 transition-colors">Research Disclaimer</Link>.
           </p>
         </div>
       </div>

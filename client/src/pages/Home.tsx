@@ -1,12 +1,18 @@
-// NOCTA PEPTIDES — Home Page
-// Hero (asymmetric: text left, vials right), stats bar, featured products, categories, trust section
+// NOCTA PEPTIDES — Home Page (Visual Redesign)
+// All content/links preserved. Only visual design changed.
+// Dark immersive aesthetic: grid hero bg, glassmorphism cards, electric blue accent
 
+import { useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { ArrowRight, ShieldCheck, FlaskConical, Truck, Star, ChevronRight } from 'lucide-react';
 import { getFeaturedProducts } from '@/lib/products';
 import ProductCard from '@/components/ProductCard';
 
 const HERO_IMAGE = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663480772975/WZ9nhXadZMbmVF5iFKUgx9/hero-vials-cGwSQrCCcwhCrBw7dqnSHx.webp';
+const BLUE = '#00b8ff';
+const BG = '#05080f';
+const SURFACE = '#080d1a';
+const CARD = '#0c1228';
 
 const STATS = [
   { value: '28+', label: 'Research Compounds' },
@@ -26,151 +32,376 @@ const CATEGORIES = [
 
 const TRUST_ITEMS = [
   {
-    icon: <ShieldCheck size={22} className="text-[#1A3A4A]" />,
+    icon: <ShieldCheck size={22} style={{ color: BLUE }} />,
     title: '99%+ Purity Guaranteed',
     desc: 'Every batch is third-party tested by independent ISO-certified laboratories. COA available for every product.',
   },
   {
-    icon: <FlaskConical size={22} className="text-[#1A3A4A]" />,
+    icon: <FlaskConical size={22} style={{ color: BLUE }} />,
     title: 'Research-Grade Quality',
     desc: 'Synthesized using pharmaceutical-grade processes. Lyophilized for maximum stability and shelf life.',
   },
   {
-    icon: <Truck size={22} className="text-[#1A3A4A]" />,
+    icon: <Truck size={22} style={{ color: BLUE }} />,
     title: 'Discreet & Fast Shipping',
     desc: 'Orders dispatched within 48 hours. Shipped in temperature-controlled packaging. Free shipping over $150.',
   },
 ];
 
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.querySelectorAll('[data-reveal]').forEach((child, i) => {
+            (child as HTMLElement).style.animationDelay = `${i * 0.08}s`;
+            child.classList.add('reveal');
+          });
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
+
 export default function Home() {
   const featured = getFeaturedProducts();
+  const statsRef = useReveal();
+  const productsRef = useReveal();
+  const categoriesRef = useReveal();
+  const trustRef = useReveal();
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 lg:pt-20 lg:pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Text */}
-          <div>
-            <div className="inline-flex items-center gap-2 bg-[#1A3A4A]/5 text-[#1A3A4A] text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#1A3A4A] animate-pulse" />
-              Premium Research Compounds
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#1A3A4A] leading-[1.1] tracking-tight mb-6">
-              Research-Grade<br />
-              <span className="text-gray-300">Peptides.</span><br />
-              Verified Purity.
-            </h1>
-            {/* Rebrand badge */}
-            <div className="inline-flex items-center gap-2 bg-[#1A3A4A]/5 border border-[#1A3A4A]/10 rounded-full px-4 py-1.5 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#1A3A4A]/40" />
-              <span className="text-xs text-[#1A3A4A]/70 font-medium tracking-wide">
-                Formerly HomoPeptide — Same compounds. Same COAs. Elevated brand.
-              </span>
-            </div>
-            <p className="text-gray-500 text-lg leading-relaxed mb-8 max-w-lg">
-              28 premium compounds. Every vial third-party tested to 99%+ purity.
-              COA available on every product. Trusted by researchers worldwide.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/shop">
-                <button className="btn-navy flex items-center gap-2 px-6 py-3.5 rounded-md text-sm font-semibold">
-                  Shop All Products
-                  <ArrowRight size={16} />
-                </button>
-              </Link>
-              <Link href="/coa">
-                <button className="flex items-center gap-2 px-6 py-3.5 rounded-md text-sm font-semibold border border-gray-200 text-gray-600 hover:border-[#1A3A4A] hover:text-[#1A3A4A] transition-colors">
-                  View COA Reports
-                </button>
-              </Link>
-            </div>
+    <div className="min-h-screen" style={{ background: BG }}>
 
-            {/* Mini trust row */}
-            <div className="flex items-center gap-4 mt-8 pt-8 border-t border-gray-100">
-              <div className="flex -space-x-2">
-                {['bg-blue-200','bg-green-200','bg-purple-200','bg-amber-200'].map((c,i) => (
-                  <div key={i} className={`w-7 h-7 rounded-full ${c} border-2 border-white`} />
-                ))}
+      {/* ── Hero ── Full-screen dark with grid background */}
+      <section
+        className="hero-grid-bg relative min-h-screen flex items-center overflow-hidden"
+        style={{ minHeight: '92vh' }}
+      >
+        <div className="noise-overlay" />
+
+        {/* Bottom fade to body bg */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+          style={{ background: `linear-gradient(to bottom, transparent, ${BG})` }}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 pt-10 pb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+            {/* Text */}
+            <div>
+              <div
+                className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6"
+                style={{
+                  background: 'rgba(0, 184, 255, 0.08)',
+                  border: '1px solid rgba(0, 184, 255, 0.2)',
+                  color: BLUE,
+                  fontFamily: "'Space Grotesk', sans-serif",
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full animate-pulse"
+                  style={{ background: BLUE, boxShadow: '0 0 6px rgba(0, 184, 255, 0.8)' }}
+                />
+                Premium Research Compounds
               </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  {[1,2,3,4,5].map(i => <Star key={i} size={11} className="star-gold fill-current" />)}
+
+              <h1
+                className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight mb-6"
+                style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#dff0ff' }}
+              >
+                Research-Grade
+                <br />
+                <span style={{ color: BLUE, textShadow: '0 0 30px rgba(0, 184, 255, 0.4)' }}>
+                  Peptides.
+                </span>
+                <br />
+                <span style={{ color: 'rgba(223, 240, 255, 0.35)' }}>Verified Purity.</span>
+              </h1>
+
+              {/* Rebrand badge */}
+              <div
+                className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-6"
+                style={{
+                  background: 'rgba(0, 184, 255, 0.05)',
+                  border: '1px solid rgba(0, 184, 255, 0.1)',
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: 'rgba(0, 184, 255, 0.4)' }}
+                />
+                <span
+                  className="text-xs font-medium tracking-wide"
+                  style={{ color: 'rgba(0, 184, 255, 0.6)', fontFamily: "'Inter', sans-serif" }}
+                >
+                  Formerly HomoPeptide — Same compounds. Same COAs. Elevated brand.
+                </span>
+              </div>
+
+              <p
+                className="text-lg leading-relaxed mb-8 max-w-lg"
+                style={{ color: 'rgba(223, 240, 255, 0.5)', fontFamily: "'Inter', sans-serif" }}
+              >
+                28 premium compounds. Every vial third-party tested to 99%+ purity.
+                COA available on every product. Trusted by researchers worldwide.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/shop">
+                  <button className="btn-navy flex items-center gap-2 px-6 py-3.5 rounded-lg text-sm font-semibold">
+                    Shop All Products
+                    <ArrowRight size={16} />
+                  </button>
+                </Link>
+                <Link href="/coa">
+                  <button
+                    className="flex items-center gap-2 px-6 py-3.5 rounded-lg text-sm font-semibold transition-all duration-200"
+                    style={{
+                      border: '1px solid rgba(0, 184, 255, 0.2)',
+                      color: 'rgba(223, 240, 255, 0.65)',
+                      background: 'transparent',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0, 184, 255, 0.45)';
+                      (e.currentTarget as HTMLElement).style.color = '#dff0ff';
+                      (e.currentTarget as HTMLElement).style.background = 'rgba(0, 184, 255, 0.06)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0, 184, 255, 0.2)';
+                      (e.currentTarget as HTMLElement).style.color = 'rgba(223, 240, 255, 0.65)';
+                      (e.currentTarget as HTMLElement).style.background = 'transparent';
+                    }}
+                  >
+                    View COA Reports
+                  </button>
+                </Link>
+              </div>
+
+              {/* Trust row */}
+              <div
+                className="flex items-center gap-4 mt-8 pt-8"
+                style={{ borderTop: '1px solid rgba(0, 184, 255, 0.08)' }}
+              >
+                <div className="flex -space-x-2">
+                  {['rgba(0,184,255,0.3)', 'rgba(0,140,220,0.3)', 'rgba(80,200,255,0.3)', 'rgba(0,100,200,0.3)'].map((c, i) => (
+                    <div
+                      key={i}
+                      className="w-7 h-7 rounded-full border-2"
+                      style={{
+                        background: c,
+                        borderColor: BG,
+                        backdropFilter: 'blur(4px)',
+                      }}
+                    />
+                  ))}
                 </div>
-                <p className="text-xs text-gray-400 mt-0.5">Trusted by 2,400+ researchers</p>
+                <div>
+                  <div className="flex items-center gap-1">
+                    {[1,2,3,4,5].map(i => <Star key={i} size={11} className="star-gold fill-current" />)}
+                  </div>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(223, 240, 255, 0.35)' }}>
+                    Trusted by 2,400+ researchers
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Hero Image */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl" />
-            <img
-              src={HERO_IMAGE}
-              alt="Nocta Peptides product vials"
-              className="relative w-full rounded-3xl object-cover shadow-xl"
-            />
-            {/* Floating badge */}
-            <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg px-4 py-3 border border-gray-100">
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Purity</p>
-              <p className="text-xl font-extrabold text-[#1A3A4A]">99%+</p>
-              <p className="text-[10px] text-gray-400">3rd Party Verified</p>
-            </div>
-            <div className="absolute -top-4 -right-4 bg-[#1A3A4A] rounded-xl shadow-lg px-4 py-3">
-              <p className="text-[10px] text-white/60 uppercase tracking-widest font-semibold">Products</p>
-              <p className="text-xl font-extrabold text-white">28+</p>
-              <p className="text-[10px] text-white/60">Compounds</p>
+            {/* Hero Image */}
+            <div className="relative">
+              {/* Glow behind image */}
+              <div
+                className="absolute inset-0 rounded-3xl pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at center, rgba(0, 184, 255, 0.08) 0%, transparent 70%)' }}
+              />
+              <div
+                className="relative rounded-3xl overflow-hidden"
+                style={{
+                  border: '1px solid rgba(0, 184, 255, 0.12)',
+                  background: 'rgba(8, 13, 26, 0.8)',
+                  boxShadow: '0 0 60px rgba(0, 184, 255, 0.06), 0 20px 60px rgba(0, 0, 0, 0.6)',
+                }}
+              >
+                <img
+                  src={HERO_IMAGE}
+                  alt="Nocta Peptides product vials"
+                  className="w-full rounded-3xl object-cover"
+                  style={{ filter: 'brightness(0.95) contrast(1.05)' }}
+                />
+              </div>
+
+              {/* Floating badge — purity */}
+              <div
+                className="absolute -bottom-4 -left-4 rounded-xl px-4 py-3 glass-card"
+                style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 184, 255, 0.1)' }}
+              >
+                <p
+                  className="text-[10px] uppercase tracking-widest font-semibold"
+                  style={{ color: 'rgba(0, 184, 255, 0.6)' }}
+                >
+                  Purity
+                </p>
+                <p
+                  className="text-xl font-extrabold"
+                  style={{ color: BLUE, fontFamily: "'Space Grotesk', sans-serif", textShadow: '0 0 15px rgba(0, 184, 255, 0.5)' }}
+                >
+                  99%+
+                </p>
+                <p className="text-[10px]" style={{ color: 'rgba(223, 240, 255, 0.35)' }}>
+                  3rd Party Verified
+                </p>
+              </div>
+
+              {/* Floating badge — compounds */}
+              <div
+                className="absolute -top-4 -right-4 rounded-xl px-4 py-3"
+                style={{
+                  background: BLUE,
+                  boxShadow: '0 0 30px rgba(0, 184, 255, 0.4), 0 8px 32px rgba(0, 0, 0, 0.4)',
+                }}
+              >
+                <p
+                  className="text-[10px] uppercase tracking-widest font-semibold"
+                  style={{ color: 'rgba(5, 8, 15, 0.65)' }}
+                >
+                  Products
+                </p>
+                <p
+                  className="text-xl font-extrabold"
+                  style={{ color: '#05080f', fontFamily: "'Space Grotesk', sans-serif" }}
+                >
+                  28+
+                </p>
+                <p className="text-[10px]" style={{ color: 'rgba(5, 8, 15, 0.55)' }}>
+                  Compounds
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Bar */}
-      <section className="section-gray border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* ── Stats Bar ── */}
+      <section
+        className="blue-rule"
+        style={{ marginTop: 0 }}
+      />
+      <section ref={statsRef} style={{ background: SURFACE, borderBottom: '1px solid rgba(0, 184, 255, 0.07)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {STATS.map(stat => (
-              <div key={stat.label} className="text-center">
-                <p className="text-2xl sm:text-3xl font-extrabold text-[#1A3A4A]">{stat.value}</p>
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mt-1">{stat.label}</p>
+            {STATS.map((stat, i) => (
+              <div key={stat.label} className="text-center" data-reveal>
+                <p
+                  className="text-2xl sm:text-3xl font-extrabold"
+                  style={{ color: BLUE, fontFamily: "'Space Grotesk', sans-serif", textShadow: '0 0 20px rgba(0, 184, 255, 0.3)' }}
+                >
+                  {stat.value}
+                </p>
+                <p
+                  className="text-xs font-medium uppercase tracking-wider mt-1"
+                  style={{ color: 'rgba(223, 240, 255, 0.38)' }}
+                >
+                  {stat.label}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center justify-between mb-8">
+      {/* ── Featured Products ── */}
+      <section
+        ref={productsRef}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
+      >
+        <div className="flex items-center justify-between mb-10" data-reveal>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">Top Sellers</p>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1A3A4A] tracking-tight">Featured Products</h2>
+            <p
+              className="text-xs font-semibold uppercase tracking-widest mb-1"
+              style={{ color: 'rgba(0, 184, 255, 0.6)', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Top Sellers
+            </p>
+            <h2
+              className="text-2xl sm:text-3xl font-extrabold tracking-tight"
+              style={{ color: '#dff0ff', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Featured Products
+            </h2>
           </div>
-          <Link href="/shop" className="flex items-center gap-1 text-sm font-medium text-[#1A3A4A] hover:gap-2 transition-all">
+          <Link
+            href="/shop"
+            className="flex items-center gap-1 text-sm font-medium transition-all duration-200 hover:gap-2"
+            style={{ color: BLUE, fontFamily: "'Space Grotesk', sans-serif" }}
+          >
             View All <ChevronRight size={16} />
           </Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-          {featured.map(product => (
-            <ProductCard key={product.id} product={product} />
+          {featured.map((product, i) => (
+            <div key={product.id} data-reveal style={{ animationDelay: `${i * 0.07}s` }}>
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="section-gray border-y border-gray-100 py-16">
+      {/* ── Categories ── */}
+      <div className="blue-rule mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" />
+      <section
+        ref={categoriesRef}
+        className="py-16"
+        style={{ background: SURFACE, borderTop: '1px solid rgba(0, 184, 255, 0.06)', borderBottom: '1px solid rgba(0, 184, 255, 0.06)' }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Browse By Goal</p>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1A3A4A] tracking-tight">Research Categories</h2>
+          <div className="text-center mb-10" data-reveal>
+            <p
+              className="text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: 'rgba(0, 184, 255, 0.6)', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Browse By Goal
+            </p>
+            <h2
+              className="text-2xl sm:text-3xl font-extrabold tracking-tight"
+              style={{ color: '#dff0ff', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Research Categories
+            </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {CATEGORIES.map(cat => (
+            {CATEGORIES.map((cat, i) => (
               <Link key={cat.id} href={`/shop?category=${cat.id}`}>
-                <div className="bg-white rounded-xl border border-gray-100 p-4 text-center hover:border-[#1A3A4A]/30 hover:shadow-md transition-all cursor-pointer group">
+                <div
+                  className="rounded-xl p-4 text-center cursor-pointer card-glow"
+                  data-reveal
+                  style={{
+                    background: CARD,
+                    border: '1px solid rgba(0, 184, 255, 0.08)',
+                    animationDelay: `${i * 0.06}s`,
+                  }}
+                >
                   <div className="text-2xl mb-2">{cat.icon}</div>
-                  <p className="font-semibold text-[#1A3A4A] text-xs mb-1">{cat.label}</p>
-                  <p className="text-gray-400 text-[10px] leading-tight">{cat.desc}</p>
+                  <p
+                    className="font-semibold text-xs mb-1"
+                    style={{ color: '#dff0ff', fontFamily: "'Space Grotesk', sans-serif" }}
+                  >
+                    {cat.label}
+                  </p>
+                  <p
+                    className="text-[10px] leading-tight"
+                    style={{ color: 'rgba(223, 240, 255, 0.35)' }}
+                  >
+                    {cat.desc}
+                  </p>
                 </div>
               </Link>
             ))}
@@ -178,38 +409,101 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-10">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Why Nocta</p>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1A3A4A] tracking-tight">The Nocta Standard</h2>
+      {/* ── Trust Section ── */}
+      <section
+        ref={trustRef}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
+      >
+        <div className="text-center mb-10" data-reveal>
+          <p
+            className="text-xs font-semibold uppercase tracking-widest mb-2"
+            style={{ color: 'rgba(0, 184, 255, 0.6)', fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            Why Nocta
+          </p>
+          <h2
+            className="text-2xl sm:text-3xl font-extrabold tracking-tight"
+            style={{ color: '#dff0ff', fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            The Nocta Standard
+          </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {TRUST_ITEMS.map(item => (
-            <div key={item.title} className="flex flex-col items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#1A3A4A]/5 flex items-center justify-center">
+          {TRUST_ITEMS.map((item, i) => (
+            <div
+              key={item.title}
+              className="flex flex-col items-start gap-4 p-6 rounded-xl card-glow"
+              data-reveal
+              style={{
+                background: CARD,
+                border: '1px solid rgba(0, 184, 255, 0.08)',
+                animationDelay: `${i * 0.1}s`,
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center"
+                style={{ background: 'rgba(0, 184, 255, 0.08)', border: '1px solid rgba(0, 184, 255, 0.15)' }}
+              >
                 {item.icon}
               </div>
-              <h3 className="font-bold text-[#1A3A4A] text-base">{item.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+              <h3
+                className="font-bold text-base"
+                style={{ color: '#dff0ff', fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                {item.title}
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: 'rgba(223, 240, 255, 0.45)' }}>
+                {item.desc}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="bg-[#1A3A4A] rounded-2xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+      {/* ── CTA Banner ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div
+          className="rounded-2xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, #050d20 0%, #081828 50%, #04101c 100%)`,
+            border: '1px solid rgba(0, 184, 255, 0.18)',
+            boxShadow: '0 0 60px rgba(0, 184, 255, 0.06), inset 0 1px 0 rgba(0, 184, 255, 0.1)',
+          }}
+        >
+          {/* Background glow */}
+          <div
+            className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(0, 184, 255, 0.08) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }}
+          />
+          <div className="relative z-10">
+            <h2
+              className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2"
+              style={{ color: '#dff0ff', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
               Ready to start your research?
             </h2>
-            <p className="text-white/60 text-sm">
+            <p className="text-sm" style={{ color: 'rgba(223, 240, 255, 0.45)' }}>
               Browse 28 premium compounds. Free shipping on orders over $150.
             </p>
           </div>
-          <Link href="/shop">
-            <button className="bg-white text-[#1A3A4A] font-bold px-6 py-3.5 rounded-md text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 whitespace-nowrap">
+          <Link href="/shop" className="relative z-10">
+            <button
+              className="font-bold px-6 py-3.5 rounded-lg text-sm flex items-center gap-2 whitespace-nowrap transition-all duration-200"
+              style={{
+                background: BLUE,
+                color: '#05080f',
+                fontFamily: "'Space Grotesk', sans-serif",
+                boxShadow: '0 0 25px rgba(0, 184, 255, 0.4)',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 0 40px rgba(0, 184, 255, 0.6)';
+                (e.currentTarget as HTMLElement).style.background = '#20c4ff';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 0 25px rgba(0, 184, 255, 0.4)';
+                (e.currentTarget as HTMLElement).style.background = BLUE;
+              }}
+            >
               Shop Now <ArrowRight size={16} />
             </button>
           </Link>

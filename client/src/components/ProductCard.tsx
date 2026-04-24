@@ -1,6 +1,5 @@
 // NOCTA PEPTIDES — Product Card
-// Used in shop grid and featured sections
-// White card, hover lift, purity badge, add to cart
+// Dark glassmorphism card, blue glow on hover, all cart logic preserved
 
 import { useState } from 'react';
 import { Link } from 'wouter';
@@ -24,43 +23,87 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="product-card bg-white rounded-xl border border-gray-100 overflow-hidden group">
+    <div className="product-card rounded-xl overflow-hidden group">
       <Link href={`/product/${product.id}`}>
         {/* Image */}
-        <div className="relative bg-gray-50 aspect-square overflow-hidden">
+        <div
+          className="relative aspect-square overflow-hidden"
+          style={{ background: 'rgba(8, 13, 26, 0.9)' }}
+        >
           <img
             src={product.imageCompressed}
             alt={product.name}
-            className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-108"
+            style={{ transform: 'scale(1)', transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
             loading="lazy"
           />
+          {/* Subtle blue vignette on image hover */}
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0, 184, 255, 0.06) 100%)' }}
+          />
           {product.tags?.includes('bestseller') && (
-            <div className="absolute top-3 left-3 bg-[#1A3A4A] text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+            <div
+              className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+              style={{
+                background: 'rgba(0, 184, 255, 0.15)',
+                color: '#00b8ff',
+                border: '1px solid rgba(0, 184, 255, 0.3)',
+                fontFamily: "'Space Grotesk', sans-serif",
+                backdropFilter: 'blur(8px)',
+              }}
+            >
               Bestseller
             </div>
           )}
           {product.isBlend && (
-            <div className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+            <div
+              className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+              style={{
+                background: 'rgba(245, 166, 35, 0.15)',
+                color: '#F5A623',
+                border: '1px solid rgba(245, 166, 35, 0.3)',
+                fontFamily: "'Space Grotesk', sans-serif",
+                backdropFilter: 'blur(8px)',
+              }}
+            >
               Blend
             </div>
           )}
         </div>
 
         {/* Info */}
-        <div className="p-4">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="font-bold text-[#1A3A4A] text-sm leading-tight">{product.name}</h3>
+        <div className="p-4" style={{ borderTop: '1px solid rgba(0, 184, 255, 0.07)' }}>
+          <div className="flex items-start justify-between gap-2 mb-1.5">
+            <h3
+              className="font-bold text-sm leading-tight"
+              style={{ color: '#dff0ff', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              {product.name}
+            </h3>
             <span className="purity-badge flex-shrink-0">{product.purity}</span>
           </div>
 
-          <p className="text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2">{product.shortDesc}</p>
+          <p
+            className="text-xs leading-relaxed mb-3 line-clamp-2"
+            style={{ color: 'rgba(223, 240, 255, 0.42)' }}
+          >
+            {product.shortDesc}
+          </p>
 
           {/* Stars */}
           <div className="flex items-center gap-1 mb-3">
             {[1,2,3,4,5].map(i => (
-              <Star key={i} size={10} className={`${i <= Math.round(product.rating || 5) ? 'star-gold fill-current' : 'text-gray-200'}`} />
+              <Star
+                key={i}
+                size={10}
+                className={i <= Math.round(product.rating || 5) ? 'star-gold fill-current' : ''}
+                style={{ color: i <= Math.round(product.rating || 5) ? '#F5A623' : 'rgba(223, 240, 255, 0.15)' }}
+              />
             ))}
-            <span className="text-gray-400 text-[10px] ml-1">({product.rating || 5.0})</span>
+            <span className="text-[10px] ml-1" style={{ color: 'rgba(223, 240, 255, 0.35)' }}>
+              ({product.rating || 5.0})
+            </span>
           </div>
 
           {/* Dosage selector */}
@@ -80,7 +123,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Price + Add to Cart */}
           <div className="flex items-center justify-between">
-            <span className="font-bold text-[#1A3A4A] text-base">
+            <span
+              className="font-bold text-base"
+              style={{ color: '#dff0ff', fontFamily: "'Space Grotesk', sans-serif" }}
+            >
               {product.variants.length > 1 && selectedVariant === 0
                 ? `From $${Math.min(...product.variants.map(v => v.price)).toFixed(2)}`
                 : `$${variant.price.toFixed(2)}`}
