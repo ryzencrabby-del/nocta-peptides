@@ -6,6 +6,7 @@ import { Link } from 'wouter';
 import { ShoppingCart, Star } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import type { Product } from '@/lib/products';
+import VialPlaceholder from './VialPlaceholder';
 
 interface ProductCardProps {
   product: Product;
@@ -14,6 +15,8 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
   const [selectedVariant, setSelectedVariant] = useState(0);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const variant = product.variants[selectedVariant];
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -28,19 +31,34 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Image */}
         <div
           className="relative aspect-square overflow-hidden"
-          style={{ background: 'rgba(8, 13, 26, 0.9)' }}
+          style={{ background: '#030810' }}
         >
-          <img
-            src={product.imageCompressed}
-            alt={product.name}
-            className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-108"
-            style={{ transform: 'scale(1)', transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
-            loading="lazy"
-          />
-          {/* Subtle blue vignette on image hover */}
+          {/* CSS vial placeholder — always present as base */}
+          <div className="absolute inset-0 transition-opacity duration-500" style={{ opacity: imgLoaded ? 0 : 1 }}>
+            <VialPlaceholder />
+          </div>
+
+          {/* Real product image fades in over placeholder once loaded */}
+          {!imgError && (
+            <img
+              src={product.imageCompressed}
+              alt={product.name}
+              className="absolute inset-0 w-full h-full object-contain p-4"
+              style={{
+                opacity: imgLoaded ? 1 : 0,
+                transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                transform: 'scale(1)',
+              }}
+              loading="lazy"
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+            />
+          )}
+
+          {/* Subtle blue vignette on hover */}
           <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0, 184, 255, 0.06) 100%)' }}
+            style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0, 184, 255, 0.07) 100%)' }}
           />
           {product.tags?.includes('bestseller') && (
             <div
