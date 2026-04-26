@@ -31,7 +31,7 @@ export const CATEGORIES = [
   { id: 'recovery', label: 'Recovery' },
   { id: 'anti-aging', label: 'Anti-Aging' },
   { id: 'cognitive', label: 'Cognitive' },
-  { id: 'sexual-health', label: 'Sexual Health' },
+  { id: 'sexual-health', label: 'Hormonal Health' },
   { id: 'blends', label: 'Blends & Stacks' },
   { id: 'accessories', label: 'Accessories' },
 ];

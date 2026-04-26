@@ -65,7 +65,7 @@ const ARTICLES = [
   {
     id: 'melanotan-photoprotection',
     title: 'Melanotan Peptides: Photoprotection Research',
-    category: 'Sexual Health',
+    category: 'Hormonal Health',
     summary: 'A comparative review of Melanotan I and II, their melanocortin receptor selectivity profiles, and the research evidence for photoprotective and other physiological effects.',
     readTime: '5 min',
     tags: ['Melanotan I', 'Melanotan II', 'Photoprotection'],
@@ -80,7 +80,7 @@ const ARTICLES = [
   },
 ];
 
-const CATEGORIES_FILTER = ['All', 'Weight Loss', 'Recovery', 'Anti-Aging', 'Cognitive', 'Sexual Health', 'Technical'];
+const CATEGORIES_FILTER = ['All', 'Weight Loss', 'Recovery', 'Anti-Aging', 'Cognitive', 'Hormonal Health', 'Technical'];
 
 export default function Research() {
   const [activeCategory, setActiveCategory] = useState('All');
@@ -96,20 +96,28 @@ export default function Research() {
   });
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ background: '#05080f' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-[#1A3A4A]/5 flex items-center justify-center">
-              <BookOpen size={20} className="text-[#1A3A4A]" />
+            <div
+              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ background: 'rgba(0,184,255,0.08)', border: '1px solid rgba(0,184,255,0.1)' }}
+            >
+              <BookOpen size={20} style={{ color: '#00b8ff' }} />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Education</p>
-              <h1 className="text-3xl font-extrabold text-[#1A3A4A] tracking-tight">Research Library</h1>
+              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(223,240,255,0.45)' }}>Education</p>
+              <h1
+                className="text-3xl font-extrabold tracking-tight"
+                style={{ color: '#dff0ff', fontFamily: "'Space Grotesk',sans-serif" }}
+              >
+                Research Library
+              </h1>
             </div>
           </div>
-          <p className="text-gray-500 text-base max-w-2xl leading-relaxed">
+          <p className="text-base max-w-2xl leading-relaxed" style={{ color: 'rgba(223,240,255,0.45)' }}>
             Educational resources on research peptides, mechanisms of action, and laboratory protocols.
             All content is for informational purposes only and does not constitute medical advice.
           </p>
@@ -117,13 +125,21 @@ export default function Research() {
 
         {/* Search */}
         <div className="relative mb-6 max-w-md">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(223,240,255,0.4)' }} />
           <input
             type="text"
             placeholder="Search articles..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#1A3A4A] transition-colors"
+            className="w-full pl-9 pr-4 py-2.5 text-sm rounded-lg"
+            style={{
+              background: 'rgba(12,18,40,0.8)',
+              border: '1px solid rgba(0,184,255,0.12)',
+              color: '#dff0ff',
+              outline: 'none',
+            }}
+            onFocus={e => { (e.currentTarget as HTMLInputElement).style.borderColor = 'rgba(0,184,255,0.4)'; }}
+            onBlur={e => { (e.currentTarget as HTMLInputElement).style.borderColor = 'rgba(0,184,255,0.12)'; }}
           />
         </div>
 
@@ -133,11 +149,12 @@ export default function Research() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              className="px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200"
+              style={
                 activeCategory === cat
-                  ? 'bg-[#1A3A4A] text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+                  ? { background: 'rgba(0,184,255,0.15)', color: '#00b8ff', border: '1px solid rgba(0,184,255,0.35)' }
+                  : { background: 'rgba(12,18,40,0.8)', color: 'rgba(223,240,255,0.5)', border: '1px solid rgba(0,184,255,0.08)' }
+              }
             >
               {cat}
             </button>
@@ -147,26 +164,48 @@ export default function Research() {
         {/* Articles Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map(article => (
-            <div key={article.id} className="bg-white border border-gray-100 rounded-xl p-6 hover:border-[#1A3A4A]/20 hover:shadow-md transition-all">
+            <div
+              key={article.id}
+              className="rounded-xl p-6 transition-all duration-200"
+              style={{ background: '#0c1228', border: '1px solid rgba(0,184,255,0.08)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,184,255,0.25)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,184,255,0.08)'; }}
+            >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-widest text-[#1A3A4A] bg-[#1A3A4A]/5 px-2.5 py-1 rounded-full">
+                <span
+                  className="text-xs font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                  style={{ color: '#00b8ff', background: 'rgba(0,184,255,0.08)', border: '1px solid rgba(0,184,255,0.12)' }}
+                >
                   {article.category}
                 </span>
-                <span className="text-xs text-gray-400">{article.readTime} read</span>
+                <span className="text-xs" style={{ color: 'rgba(223,240,255,0.3)' }}>{article.readTime} read</span>
               </div>
-              <h3 className="font-bold text-[#1A3A4A] text-base leading-tight mb-2">{article.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">{article.summary}</p>
+              <h3
+                className="font-bold text-base leading-tight mb-2"
+                style={{ color: '#dff0ff', fontFamily: "'Space Grotesk',sans-serif" }}
+              >
+                {article.title}
+              </h3>
+              <p className="text-sm leading-relaxed mb-4 line-clamp-3" style={{ color: 'rgba(223,240,255,0.45)' }}>{article.summary}</p>
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {article.tags.slice(0, 3).map(tag => (
-                  <span key={tag} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                  <span
+                    key={tag}
+                    className="text-[10px] px-2 py-0.5 rounded-full"
+                    style={{ background: 'rgba(0,184,255,0.06)', color: 'rgba(223,240,255,0.4)' }}
+                  >
                     {tag}
                   </span>
                 ))}
               </div>
-              <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+              <div
+                className="flex items-center justify-between pt-3"
+                style={{ borderTop: '1px solid rgba(0,184,255,0.06)' }}
+              >
                 <button
                   onClick={() => alert(`Full article on "${article.title}" coming soon. Check back for updates.`)}
-                  className="text-sm text-[#1A3A4A] font-medium hover:underline flex items-center gap-1"
+                  className="text-sm font-medium hover:underline flex items-center gap-1"
+                  style={{ color: '#00b8ff' }}
                 >
                   Read Article <ExternalLink size={12} />
                 </button>
@@ -177,17 +216,20 @@ export default function Research() {
 
         {filtered.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-gray-400">No articles found matching your search.</p>
+            <p style={{ color: 'rgba(223,240,255,0.4)' }}>No articles found matching your search.</p>
           </div>
         )}
 
         {/* PubMed Banner */}
-        <div className="mt-12 bg-[#1A3A4A] rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div
+          className="mt-12 rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ background: 'linear-gradient(135deg, #050d20 0%, #081828 100%)', border: '1px solid rgba(0,184,255,0.2)' }}
+        >
           <div className="flex items-center gap-4">
-            <FlaskConical size={32} className="text-white/40 flex-shrink-0" />
+            <FlaskConical size={32} className="flex-shrink-0" style={{ color: 'rgba(0,184,255,0.4)' }} />
             <div>
-              <h3 className="text-white font-bold text-lg">Explore Primary Research</h3>
-              <p className="text-white/60 text-sm mt-1">
+              <h3 className="font-bold text-lg" style={{ color: '#dff0ff', fontFamily: "'Space Grotesk',sans-serif" }}>Explore Primary Research</h3>
+              <p className="text-sm mt-1" style={{ color: 'rgba(223,240,255,0.55)' }}>
                 Access peer-reviewed studies on PubMed and Google Scholar for primary research literature.
               </p>
             </div>
@@ -196,7 +238,8 @@ export default function Research() {
             href="https://pubmed.ncbi.nlm.nih.gov"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-white text-[#1A3A4A] font-semibold px-5 py-2.5 rounded-md text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 whitespace-nowrap"
+            className="font-semibold px-5 py-2.5 rounded-md text-sm flex items-center gap-2 whitespace-nowrap transition-all duration-200"
+            style={{ background: '#00b8ff', color: '#05080f' }}
           >
             Visit PubMed <ExternalLink size={14} />
           </a>

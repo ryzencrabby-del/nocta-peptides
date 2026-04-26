@@ -27,9 +27,6 @@ export default function Footer() {
             <p className="text-sm leading-relaxed mb-3" style={{ color: 'rgba(223, 240, 255, 0.4)' }}>
               Premium research-grade peptides. Third-party tested to 99%+ purity. Trusted by researchers worldwide.
             </p>
-            <p className="text-xs leading-relaxed" style={{ color: 'rgba(223, 240, 255, 0.22)' }}>
-              Nocta Peptides is the official rebrand of HomoPeptide. Same verified compounds. Same Janoshik-tested batches.
-            </p>
             <div className="mt-4 flex items-center gap-2 text-sm" style={{ color: 'rgba(223, 240, 255, 0.4)' }}>
               <Mail size={14} style={{ color: 'rgba(0, 184, 255, 0.6)' }} />
               <a
@@ -39,6 +36,46 @@ export default function Footer() {
               >
                 support@noctapeptides.com
               </a>
+            </div>
+            <div className="flex gap-3 mt-3">
+              <a
+                href="https://instagram.com/noctapeptides"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors duration-200"
+                style={{ color: 'rgba(223,240,255,0.4)' }}
+                aria-label="Instagram"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <circle cx="12" cy="12" r="4"/>
+                  <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
+                </svg>
+              </a>
+              <a
+                href="https://twitter.com/noctapeptides"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors duration-200"
+                style={{ color: 'rgba(223,240,255,0.4)' }}
+                aria-label="X / Twitter"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </a>
+            </div>
+            <div className="mt-5">
+              <p style={{ color: 'rgba(223,240,255,0.35)', fontSize: '11px', fontFamily: "'Space Grotesk',sans-serif", textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', fontWeight: 600 }}>Stay Updated</p>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  className="flex-1 px-3 py-2 text-xs rounded-md"
+                  style={{ background: 'rgba(12,18,40,0.8)', border: '1px solid rgba(0,184,255,0.12)', color: '#dff0ff', fontFamily: "'Inter',sans-serif", outline: 'none', minWidth: 0 }}
+                />
+                <button className="btn-navy px-3 py-2 text-xs rounded-md whitespace-nowrap">Subscribe</button>
+              </div>
             </div>
           </div>
 
@@ -85,7 +122,7 @@ export default function Footer() {
                 { href: '/about', label: 'About Us' },
                 { href: '/research', label: 'Research Library' },
                 { href: '/coa', label: 'Certificates of Analysis' },
-                { href: '/partner', label: 'Partner Program' },
+                { href: '/partner', label: 'Partners' },
                 { href: '/contact', label: 'Contact Us' },
               ].map(link => (
                 <li key={link.href}>

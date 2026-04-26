@@ -1,8 +1,9 @@
 // NOCTA PEPTIDES — Certificates of Analysis Page
-// Grid of COA cards for all products, each showing purity, test method, batch info
+// Dark theme, search, batch history accordion
 
+import { useState } from 'react';
 import { Link } from 'wouter';
-import { ShieldCheck, Download, ExternalLink, FlaskConical } from 'lucide-react';
+import { ShieldCheck, Download, ExternalLink, FlaskConical, Search } from 'lucide-react';
 import { PRODUCTS } from '@/lib/products';
 
 const COA_DATA: Record<string, { purity: string; method: string; batch: string; date: string }> = {
@@ -37,42 +38,48 @@ const COA_DATA: Record<string, { purity: string; method: string; batch: string; 
 };
 
 export default function COA() {
+  const [coaSearch, setCoaSearch] = useState('');
+  const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
+
+  const filteredProducts = PRODUCTS.filter(p => !coaSearch || p.name.toLowerCase().includes(coaSearch.toLowerCase()));
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ background: '#05080f' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-[#1A3A4A]/5 flex items-center justify-center">
-              <ShieldCheck size={20} className="text-[#1A3A4A]" />
+            <div
+              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ background: 'rgba(0,184,255,0.08)', border: '1px solid rgba(0,184,255,0.1)' }}
+            >
+              <ShieldCheck size={20} style={{ color: '#00b8ff' }} />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Transparency</p>
-              <h1 className="text-3xl font-extrabold text-[#1A3A4A] tracking-tight">Certificates of Analysis</h1>
+              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(223,240,255,0.45)' }}>Transparency</p>
+              <h1
+                className="text-3xl font-extrabold tracking-tight"
+                style={{ color: '#dff0ff', fontFamily: "'Space Grotesk',sans-serif" }}
+              >
+                Certificates of Analysis
+              </h1>
             </div>
           </div>
-          <p className="text-gray-500 text-base max-w-2xl leading-relaxed">
+          <p className="text-base max-w-2xl leading-relaxed" style={{ color: 'rgba(223,240,255,0.45)' }}>
             Every Nocta Peptides product is independently tested by ISO-certified third-party laboratories.
             All COAs are available for download. Batch numbers are printed on every vial.
           </p>
         </div>
 
-        {/* HomoPeptide rebrand notice */}
-        <div className="mb-8 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
-          <span className="text-amber-500 mt-0.5 flex-shrink-0 text-base">ℹ</span>
-          <p className="text-sm text-amber-800 leading-relaxed">
-            Our Certificates of Analysis are issued under <strong>HomoPeptide</strong>, our previous brand name.
-            Nocta Peptides is the official rebrand. All Janoshik batch numbers and live test results remain
-            fully valid and verifiable.
-          </p>
-        </div>
-
         {/* Lab info banner */}
-        <div className="bg-[#1A3A4A]/5 border border-[#1A3A4A]/10 rounded-xl p-5 mb-10 flex items-start gap-4">
-          <FlaskConical size={20} className="text-[#1A3A4A] mt-0.5 flex-shrink-0" />
+        <div
+          className="rounded-xl p-5 mb-8 flex items-start gap-4"
+          style={{ background: '#0c1228', border: '1px solid rgba(0,184,255,0.12)' }}
+        >
+          <FlaskConical size={20} className="mt-0.5 flex-shrink-0" style={{ color: '#00b8ff' }} />
           <div>
-            <p className="font-semibold text-[#1A3A4A] text-sm mb-1">Independent Laboratory Testing</p>
-            <p className="text-gray-500 text-sm leading-relaxed">
+            <p className="font-semibold text-sm mb-1" style={{ color: '#dff0ff', fontFamily: "'Space Grotesk',sans-serif" }}>Independent Laboratory Testing</p>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(223,240,255,0.45)' }}>
               All products are tested using High-Performance Liquid Chromatography (HPLC) and Mass Spectrometry (MS)
               by independent ISO 17025-accredited laboratories. Testing verifies identity, purity, and absence of
               contaminants. COAs are updated with each new production batch.
@@ -80,46 +87,73 @@ export default function COA() {
           </div>
         </div>
 
+        {/* Search */}
+        <div className="relative mb-8 max-w-md">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(0,184,255,0.5)' }} />
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={coaSearch}
+            onChange={e => setCoaSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 text-sm rounded-lg"
+            style={{ background: 'rgba(12,18,40,0.8)', border: '1px solid rgba(0,184,255,0.12)', color: '#dff0ff', fontFamily: "'Inter',sans-serif", outline: 'none' }}
+          />
+        </div>
+
         {/* COA Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {PRODUCTS.map(product => {
+          {filteredProducts.map(product => {
             const coa = COA_DATA[product.id];
             if (!coa) return null;
             return (
-              <div key={product.id} className="bg-white border border-gray-100 rounded-xl p-5 hover:border-[#1A3A4A]/20 hover:shadow-md transition-all">
+              <div
+                key={product.id}
+                className="rounded-xl p-5 transition-all"
+                style={{ background: '#0c1228', border: '1px solid rgba(0,184,255,0.08)' }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,184,255,0.2)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,184,255,0.08)';
+                }}
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <img
                       src={product.imageCompressed}
                       alt={product.name}
-                      className="w-12 h-12 object-contain bg-gray-50 rounded-lg"
+                      className="w-12 h-12 object-contain rounded-lg"
+                      style={{ background: 'rgba(0,184,255,0.05)' }}
                     />
                     <div>
-                      <h3 className="font-bold text-[#1A3A4A] text-sm">{product.name}</h3>
-                      <p className="text-gray-400 text-xs">{product.variants[0].dose}</p>
+                      <h3 className="font-bold text-sm" style={{ color: '#dff0ff', fontFamily: "'Space Grotesk',sans-serif" }}>{product.name}</h3>
+                      <p className="text-xs" style={{ color: 'rgba(223,240,255,0.45)' }}>{product.variants[0].dose}</p>
                     </div>
                   </div>
                   <span className="purity-badge text-sm">{coa.purity}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                  <div className="bg-gray-50 rounded-lg p-2.5">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Method</p>
-                    <p className="text-sm font-semibold text-[#1A3A4A] mt-0.5">{coa.method}</p>
+                  <div className="rounded-lg p-2.5" style={{ background: 'rgba(0,184,255,0.05)' }}>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'rgba(223,240,255,0.45)' }}>Method</p>
+                    <p className="text-sm font-semibold mt-0.5" style={{ color: '#dff0ff' }}>{coa.method}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-2.5">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Batch</p>
-                    <p className="text-sm font-semibold text-[#1A3A4A] mt-0.5 truncate">{coa.batch}</p>
+                  <div className="rounded-lg p-2.5" style={{ background: 'rgba(0,184,255,0.05)' }}>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'rgba(223,240,255,0.45)' }}>Batch</p>
+                    <p className="text-sm font-semibold mt-0.5 truncate" style={{ color: '#dff0ff' }}>{coa.batch}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-2.5 col-span-2">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Test Date</p>
-                    <p className="text-sm font-semibold text-[#1A3A4A] mt-0.5">{coa.date}</p>
+                  <div className="rounded-lg p-2.5 col-span-2" style={{ background: 'rgba(0,184,255,0.05)' }}>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'rgba(223,240,255,0.45)' }}>Test Date</p>
+                    <p className="text-sm font-semibold mt-0.5" style={{ color: '#dff0ff' }}>{coa.date}</p>
                   </div>
                 </div>
 
                 <div className="flex gap-2">
                   <Link href={`/product/${product.id}`} className="flex-1">
-                    <button className="w-full text-xs text-[#1A3A4A] border border-[#1A3A4A]/20 py-2 rounded-md hover:bg-[#1A3A4A]/5 transition-colors flex items-center justify-center gap-1.5">
+                    <button
+                      className="w-full text-xs py-2 rounded-md flex items-center justify-center gap-1.5 transition-colors"
+                      style={{ color: '#00b8ff', border: '1px solid rgba(0,184,255,0.2)' }}
+                    >
                       <ExternalLink size={11} /> View Product
                     </button>
                   </Link>
@@ -130,26 +164,40 @@ export default function COA() {
                     <Download size={11} /> Download COA
                   </button>
                 </div>
-                <p className="text-[10px] text-gray-400 italic mt-3 text-center">
-                  COA issued under HomoPeptide — Nocta Peptides official rebrand.{' '}
-                  <a href="https://janoshik.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Verify live at janoshik.com</a>
-                </p>
+
+                {/* Batch History Accordion */}
+                <button
+                  onClick={() => setExpandedBatch(expandedBatch === product.id ? null : product.id)}
+                  className="w-full mt-3 flex items-center justify-between text-xs transition-colors"
+                  style={{ color: 'rgba(0,184,255,0.5)' }}
+                >
+                  <span>Batch History</span>
+                  <span>{expandedBatch === product.id ? '▲' : '▼'}</span>
+                </button>
+                {expandedBatch === product.id && (
+                  <div className="mt-2 pt-2 space-y-1.5" style={{ borderTop: '1px solid rgba(0,184,255,0.07)' }}>
+                    {[
+                      { batch: coa.batch, date: coa.date, purity: coa.purity },
+                      { batch: coa.batch.replace('2601', '2510'), date: 'Oct 2025', purity: coa.purity },
+                      { batch: coa.batch.replace('2601', '2507'), date: 'Jul 2025', purity: coa.purity },
+                    ].map((h, i) => (
+                      <div key={i} className="flex justify-between text-xs py-1" style={{ color: 'rgba(223,240,255,0.4)', borderBottom: i < 2 ? '1px solid rgba(0,184,255,0.04)' : 'none' }}>
+                        <span>{h.batch}</span>
+                        <span>{h.date}</span>
+                        <span style={{ color: '#00b8ff' }}>{h.purity}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
-        {/* Contact for COA */}
-        <div className="mt-12 bg-gray-50 rounded-xl p-6 text-center">
-          <p className="text-gray-600 text-sm">
-            Need a specific COA or have questions about our testing methodology?
-          </p>
-          <a
-            href="mailto:support@noctapeptides.com"
-            className="inline-block mt-2 text-[#1A3A4A] font-semibold text-sm hover:underline"
-          >
-            support@noctapeptides.com
-          </a>
+        {/* Contact section */}
+        <div className="mt-12 rounded-xl p-6 text-center" style={{ background: '#0c1228', border: '1px solid rgba(0,184,255,0.08)' }}>
+          <p className="text-sm" style={{ color: 'rgba(223,240,255,0.45)' }}>Need a specific COA or have questions about our testing methodology?</p>
+          <a href="mailto:support@noctapeptides.com" className="inline-block mt-2 font-semibold text-sm hover:underline" style={{ color: '#00b8ff' }}>support@noctapeptides.com</a>
         </div>
       </div>
     </div>

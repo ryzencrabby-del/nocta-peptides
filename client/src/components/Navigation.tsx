@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ShoppingCart, Menu, X } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
 const NAV_LINKS = [
@@ -11,12 +11,12 @@ const NAV_LINKS = [
   { href: '/research', label: 'Research Library' },
   { href: '/coa', label: 'COA' },
   { href: '/about', label: 'About' },
-  { href: '/partner', label: 'Partner Program' },
+  { href: '/partner', label: 'Partners' },
   { href: '/contact', label: 'Contact' },
 ];
 
 export default function Navigation() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { totalItems, openCart } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -49,12 +49,6 @@ export default function Navigation() {
               alt="Nocta Peptides"
               className="h-9 w-auto object-contain"
             />
-            <span
-              className="text-[10px] tracking-wide leading-none mt-0.5 hidden sm:block"
-              style={{ color: 'rgba(0, 184, 255, 0.35)', fontFamily: "'Space Grotesk', sans-serif" }}
-            >
-              Formerly known as HomoPeptide
-            </span>
           </Link>
 
           {/* Desktop Links */}
@@ -88,8 +82,20 @@ export default function Navigation() {
             ))}
           </div>
 
-          {/* Right: Cart + Mobile Toggle */}
+          {/* Right: Search + Cart + Mobile Toggle */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setLocation('/shop')}
+              className="hidden md:flex p-2 transition-colors duration-200 group"
+              style={{ color: 'rgba(223, 240, 255, 0.6)' }}
+              aria-label="Search products"
+            >
+              <Search
+                size={20}
+                className="group-hover:text-white transition-colors duration-200"
+                style={{ color: 'inherit' }}
+              />
+            </button>
             <button
               onClick={openCart}
               className="relative p-2 transition-colors duration-200 group"
