@@ -1,0 +1,35 @@
+{
+  "agents": [
+    {
+      "agent_id": "abafb5948bb3ff83d",
+      "agent_type": "Explore",
+      "started_at": "2026-04-26T03:14:38.314Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-26T03:16:45.933Z",
+      "duration_ms": 127619
+    },
+    {
+      "agent_id": "a24dba1840ff16c6b",
+      "agent_type": "Frontend Developer",
+      "started_at": "2026-04-26T05:26:06.921Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-26T05:29:07.918Z",
+      "duration_ms": 180997
+    },
+    {
+      "agent_id": "ab2bca21dca867201",
+      "agent_type": "Frontend Developer",
+      "started_at": "2026-04-26T05:28:45.183Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-26T05:34:28.459Z",
+      "duration_ms": 343276
+    }
+  ],
+  "total_spawned": 3,
+  "total_completed": 3,
+  "total_failed": 0,
+  "last_updated": "2026-04-26T05:34:28.563Z"
+}

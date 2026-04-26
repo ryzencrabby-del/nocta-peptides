@@ -1,0 +1,8 @@
+{"t":0,"agent":"abafb59","agent_type":"Explore","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"abafb59","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":127619}
+{"t":0,"agent":"a44f594","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"system","event":"keyword_detected","keyword":"ai-slop-cleaner"}
+{"t":0,"agent":"a24dba1","agent_type":"Frontend Developer","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"ab2bca2","agent_type":"Frontend Developer","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a24dba1","agent_type":"Frontend Developer","event":"agent_stop","success":true,"duration_ms":180997}
+{"t":0,"agent":"ab2bca2","agent_type":"Frontend Developer","event":"agent_stop","success":true,"duration_ms":343276}

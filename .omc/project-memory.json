@@ -1,0 +1,371 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1777173255295,
+  "projectRoot": "/Users/vorzent/New-Agency/nocta-peptides",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "express",
+        "version": "4.21.2",
+        "category": "backend"
+      },
+      {
+        "name": "react",
+        "version": "19.2.1",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.1",
+        "category": "frontend"
+      },
+      {
+        "name": "esbuild",
+        "version": "0.25.0",
+        "category": "build"
+      },
+      {
+        "name": "vite",
+        "version": "7.1.7",
+        "category": "build"
+      },
+      {
+        "name": "vitest",
+        "version": "2.1.4",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "pnpm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "pnpm build",
+    "testCommand": "pnpm test",
+    "lintCommand": null,
+    "devCommand": "pnpm dev",
+    "scripts": {
+      "dev": "NODE_ENV=development tsx watch server/_core/index.ts",
+      "build": "vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+      "start": "NODE_ENV=production node dist/index.js",
+      "check": "tsc --noEmit",
+      "format": "prettier --write .",
+      "test": "vitest run",
+      "db:push": "drizzle-kit generate && drizzle-kit migrate"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "public",
+      "scripts"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "client": {
+      "path": "client",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1777173255281,
+      "keyFiles": [
+        "index.html"
+      ]
+    },
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 1,
+      "lastAccessed": 1777173255282,
+      "keyFiles": [
+        "index.js"
+      ]
+    },
+    "drizzle": {
+      "path": "drizzle",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1777173255284,
+      "keyFiles": [
+        "0000_green_mulholland_black.sql",
+        "relations.ts",
+        "schema.ts"
+      ]
+    },
+    "patches": {
+      "path": "patches",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1777173255284,
+      "keyFiles": [
+        "wouter@3.7.1.patch"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 0,
+      "lastAccessed": 1777173255284,
+      "keyFiles": []
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 1,
+      "lastAccessed": 1777173255284,
+      "keyFiles": [
+        "generate-images.js"
+      ]
+    },
+    "server": {
+      "path": "server",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1777173255284,
+      "keyFiles": [
+        "auth.logout.test.ts",
+        "db.ts",
+        "index.ts",
+        "payments.test.ts",
+        "payments.ts"
+      ]
+    },
+    "shared": {
+      "path": "shared",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1777173255284,
+      "keyFiles": [
+        "const.ts",
+        "types.ts"
+      ]
+    },
+    "client/public": {
+      "path": "client/public",
+      "purpose": "Public files",
+      "fileCount": 4,
+      "lastAccessed": 1777173255285,
+      "keyFiles": [
+        "favicon.ico",
+        "glow-blend-50mg.png",
+        "klow-blend-80mg.png"
+      ]
+    },
+    "client/src": {
+      "path": "client/src",
+      "purpose": "Source code",
+      "fileCount": 4,
+      "lastAccessed": 1777173255285,
+      "keyFiles": [
+        "App.tsx",
+        "const.ts",
+        "index.css"
+      ]
+    },
+    "dist/public": {
+      "path": "dist/public",
+      "purpose": "Public files",
+      "fileCount": 5,
+      "lastAccessed": 1777173255285,
+      "keyFiles": [
+        "favicon.ico",
+        "glow-blend-50mg.png",
+        "index.html"
+      ]
+    },
+    "drizzle/migrations": {
+      "path": "drizzle/migrations",
+      "purpose": "Database migrations",
+      "fileCount": 1,
+      "lastAccessed": 1777173255285,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "client/src/pages/Shop.tsx",
+      "accessCount": 10,
+      "lastAccessed": 1777181325606,
+      "type": "file"
+    },
+    {
+      "path": "client/src/components/Navigation.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1777181316573,
+      "type": "file"
+    },
+    {
+      "path": "client/src/pages/Home.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1777181407499,
+      "type": "file"
+    },
+    {
+      "path": "client/src/components/Footer.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1777181316945,
+      "type": "file"
+    },
+    {
+      "path": "client/src/lib/products.ts",
+      "accessCount": 5,
+      "lastAccessed": 1777181318446,
+      "type": "file"
+    },
+    {
+      "path": ".env",
+      "accessCount": 4,
+      "lastAccessed": 1777174648212,
+      "type": "file"
+    },
+    {
+      "path": "client/src/components/ResearchBanner.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1777181317340,
+      "type": "file"
+    },
+    {
+      "path": "client/src/pages/ProductDetail.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1777181485603,
+      "type": "file"
+    },
+    {
+      "path": "client/src/pages/COA.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1777181540567,
+      "type": "file"
+    },
+    {
+      "path": "client/src/pages/About.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1777181579554,
+      "type": "file"
+    },
+    {
+      "path": "client/src/pages/Research.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1777181624236,
+      "type": "file"
+    },
+    {
+      "path": "client/src/pages/Checkout.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1777173328159,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 1,
+      "lastAccessed": 1777173286516,
+      "type": "file"
+    },
+    {
+      "path": ".env.example",
+      "accessCount": 1,
+      "lastAccessed": 1777173286878,
+      "type": "file"
+    },
+    {
+      "path": "tsconfig.json",
+      "accessCount": 1,
+      "lastAccessed": 1777173286927,
+      "type": "file"
+    },
+    {
+      "path": "ideas.md",
+      "accessCount": 1,
+      "lastAccessed": 1777173287100,
+      "type": "file"
+    },
+    {
+      "path": "client/src/App.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1777173292629,
+      "type": "file"
+    },
+    {
+      "path": "drizzle/schema.ts",
+      "accessCount": 1,
+      "lastAccessed": 1777173297256,
+      "type": "file"
+    },
+    {
+      "path": "server/routers.ts",
+      "accessCount": 1,
+      "lastAccessed": 1777173297282,
+      "type": "file"
+    },
+    {
+      "path": "vite.config.ts",
+      "accessCount": 1,
+      "lastAccessed": 1777173297768,
+      "type": "file"
+    },
+    {
+      "path": "client/src/contexts/CartContext.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1777173301325,
+      "type": "file"
+    },
+    {
+      "path": "server/payments.ts",
+      "accessCount": 1,
+      "lastAccessed": 1777173301482,
+      "type": "file"
+    },
+    {
+      "path": "shared/const.ts",
+      "accessCount": 1,
+      "lastAccessed": 1777173301820,
+      "type": "file"
+    },
+    {
+      "path": "client/src/index.css",
+      "accessCount": 1,
+      "lastAccessed": 1777173309836,
+      "type": "file"
+    },
+    {
+      "path": "server/_core/index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1777173313059,
+      "type": "file"
+    },
+    {
+      "path": "client/src/main.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1777173323966,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
