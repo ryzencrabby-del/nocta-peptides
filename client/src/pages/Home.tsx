@@ -195,6 +195,22 @@ export default function Home() {
                 <span style={{ color: 'rgba(223, 240, 255, 0.35)' }}>Verified Purity.</span>
               </h1>
 
+              {/* Rebrand notice — hero only */}
+              <div
+                className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5"
+                style={{
+                  background: 'rgba(0, 184, 255, 0.05)',
+                  border: '1px solid rgba(0, 184, 255, 0.1)',
+                }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'rgba(0, 184, 255, 0.35)' }} />
+                <span
+                  className="text-xs font-medium"
+                  style={{ color: 'rgba(0, 184, 255, 0.55)', fontFamily: "'Inter', sans-serif" }}
+                >
+                  Formerly HomoPeptide — same compounds, same COAs, new name
+                </span>
+              </div>
 
               <p
                 className="text-lg leading-relaxed mb-8 max-w-lg"

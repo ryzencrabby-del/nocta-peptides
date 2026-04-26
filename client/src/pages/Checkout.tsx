@@ -63,6 +63,7 @@ function CheckoutCardForm({
   customerName,
   shippingAddress,
   items,
+  researchConfirmed,
   onSuccess,
 }: {
   orderTotal: number
@@ -71,6 +72,7 @@ function CheckoutCardForm({
   customerName: string
   shippingAddress: string
   items: Array<{ name: string; dosage: string; qty: number; price: string }>
+  researchConfirmed: boolean
   onSuccess: () => void
 }) {
   const stripe = useStripe()
@@ -80,6 +82,10 @@ function CheckoutCardForm({
   const [errorMessage, setErrorMessage] = useState('')
 
   const handlePay = async () => {
+    if (!researchConfirmed) {
+      setErrorMessage('Please confirm the research use acknowledgment before paying.')
+      return
+    }
     if (!stripe || !elements) return
     const cardElement = elements.getElement(CardElement)
     if (!cardElement) return
@@ -218,6 +224,7 @@ export default function Checkout() {
   // Step 3
   const [paymentTab, setPaymentTab]       = useState<'crypto'|'card'>('crypto');
   const [selectedCrypto, setSelectedCrypto] = useState('');
+  const [researchConfirmed, setResearchConfirmed] = useState(false);
   const [placeOrderError, setPlaceOrderError] = useState('');
   const [isLoading, setIsLoading]           = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -293,6 +300,10 @@ export default function Checkout() {
   };
 
   const handlePlaceOrder = async () => {
+    if (!researchConfirmed) {
+      setPlaceOrderError('Please confirm the research use acknowledgment to proceed.');
+      return;
+    }
     if (paymentTab === 'card') {
       setPlaceOrderError('Please complete your card payment using the form above.');
       return;
@@ -608,6 +619,19 @@ export default function Checkout() {
                   onError={(msg) => setPlaceOrderError(msg)}
                 />
 
+                {/* Research confirmation checkbox */}
+                <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={researchConfirmed}
+                    onChange={e => setResearchConfirmed(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 flex-shrink-0 rounded border-gray-300 accent-[#0D1F35]"
+                  />
+                  <span className="text-xs text-gray-600 leading-relaxed">
+                    I confirm I am purchasing for legitimate research purposes only and am legally permitted to do so in my jurisdiction. I am 18 or older. I understand these products are not for human consumption.
+                  </span>
+                </label>
+
                 {/* Payment tabs — Crypto and Card only */}
                 <div className="flex gap-2">
                   {[
@@ -688,6 +712,7 @@ export default function Checkout() {
                         qty: i.quantity,
                         price: (i.price * i.quantity).toFixed(2)
                       }))}
+                      researchConfirmed={researchConfirmed}
                       onSuccess={() => {
                         clearCart()
                         window.location.href = `/order-confirmed?order=${genOrderNumber()}`

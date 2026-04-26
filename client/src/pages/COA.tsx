@@ -87,6 +87,21 @@ export default function COA() {
           </div>
         </div>
 
+        {/* Rebrand notice */}
+        <div
+          className="mb-8 rounded-xl px-5 py-4 flex items-start gap-3"
+          style={{ background: 'rgba(0, 184, 255, 0.04)', border: '1px solid rgba(0, 184, 255, 0.14)' }}
+        >
+          <svg className="flex-shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00b8ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(223, 240, 255, 0.55)' }}>
+            All certificates of analysis were issued under <strong style={{ color: '#dff0ff' }}>HomoPeptide</strong>, our former brand name.
+            Nocta Peptides is the official continuation of HomoPeptide. All COAs remain valid and verifiable at{' '}
+            <a href="https://janoshik.com" target="_blank" rel="noopener noreferrer" style={{ color: '#00b8ff', textDecoration: 'underline' }}>janoshik.com</a>.
+          </p>
+        </div>
+
         {/* Search */}
         <div className="relative mb-8 max-w-md">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(0,184,255,0.5)' }} />
